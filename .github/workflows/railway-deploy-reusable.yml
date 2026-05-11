@@ -3,6 +3,10 @@ name: Railway Deploy Reusable
 on:
   workflow_call:
     inputs:
+      railway_project_id:
+        description: Railway project ID to deploy into when using an API token
+        required: false
+        type: string
       railway_environment_id:
         description: Railway environment ID to deploy into
         required: true
@@ -70,6 +74,10 @@ jobs:
             echo "Missing Railway token secret"
             exit 1
           fi
+          if [ -n "${RAILWAY_API_TOKEN:-}" ] && [ -z "${{ inputs.railway_project_id }}" ]; then
+            echo "Missing Railway project id for API token authentication"
+            exit 1
+          fi
           test -n "${{ inputs.railway_environment_id }}" || { echo "Missing Railway environment id"; exit 1; }
 
       - name: Setup Node.js
@@ -82,7 +90,13 @@ jobs:
 
       - name: Deploy backend service
         working-directory: backend
-        run: railway up --service "${{ inputs.backend_service_name }}" --environment "${{ inputs.railway_environment_id }}" --ci
+        shell: bash
+        run: |
+          project_args=()
+          if [ -n "${{ inputs.railway_project_id }}" ]; then
+            project_args+=(--project "${{ inputs.railway_project_id }}")
+          fi
+          railway up "${project_args[@]}" --service "${{ inputs.backend_service_name }}" --environment "${{ inputs.railway_environment_id }}" --ci
 
   deploy-frontend:
     name: Deploy frontend to Railway
@@ -115,6 +129,10 @@ jobs:
             echo "Missing Railway token secret"
             exit 1
           fi
+          if [ -n "${RAILWAY_API_TOKEN:-}" ] && [ -z "${{ inputs.railway_project_id }}" ]; then
+            echo "Missing Railway project id for API token authentication"
+            exit 1
+          fi
           test -n "${{ inputs.railway_environment_id }}" || { echo "Missing Railway environment id"; exit 1; }
 
       - name: Setup Node.js
@@ -131,4 +149,10 @@ jobs:
 
       - name: Deploy frontend service
         working-directory: ${{ runner.temp }}/frontend-railway
-        run: railway up --service "${{ inputs.frontend_service_name }}" --environment "${{ inputs.railway_environment_id }}" --ci
+        shell: bash
+        run: |
+          project_args=()
+          if [ -n "${{ inputs.railway_project_id }}" ]; then
+            project_args+=(--project "${{ inputs.railway_project_id }}")
+          fi
+          railway up "${project_args[@]}" --service "${{ inputs.frontend_service_name }}" --environment "${{ inputs.railway_environment_id }}" --ci

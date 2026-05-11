@@ -104,6 +104,7 @@ jobs:
     if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
     uses: ./.github/workflows/railway-deploy-reusable.yml
     with:
+      railway_project_id: ${{ vars.RAILWAY_PROJECT_ID }}
       railway_environment_id: ${{ vars.RAILWAY_ENVIRONMENT_ID }}
       backend_service_name: api
       frontend_service_name: web
