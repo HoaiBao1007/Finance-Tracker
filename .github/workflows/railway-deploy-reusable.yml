@@ -1,0 +1,99 @@
+name: Railway Deploy Reusable
+
+on:
+  workflow_call:
+    inputs:
+      railway_environment_id:
+        description: Railway environment ID to deploy into
+        required: true
+        type: string
+      backend_service_name:
+        description: Railway backend service name
+        required: false
+        default: api
+        type: string
+      frontend_service_name:
+        description: Railway frontend service name
+        required: false
+        default: web
+        type: string
+      deploy_backend:
+        description: Whether to deploy backend in this run
+        required: false
+        default: true
+        type: boolean
+      deploy_frontend:
+        description: Whether to deploy frontend in this run
+        required: false
+        default: true
+        type: boolean
+    secrets:
+      railway_token:
+        description: Railway project token used by CI/CD
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-backend:
+    name: Deploy backend to Railway
+    if: inputs.deploy_backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RAILWAY_TOKEN: ${{ secrets.railway_token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Railway CI settings
+        shell: bash
+        run: |
+          test -n "${RAILWAY_TOKEN:-}" || { echo "Missing Railway token secret"; exit 1; }
+          test -n "${{ inputs.railway_environment_id }}" || { echo "Missing Railway environment id"; exit 1; }
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Railway CLI
+        run: npm install --global @railway/cli
+
+      - name: Deploy backend service
+        working-directory: backend
+        run: railway up --service "${{ inputs.backend_service_name }}" --environment "${{ inputs.railway_environment_id }}" --ci
+
+  deploy-frontend:
+    name: Deploy frontend to Railway
+    if: inputs.deploy_frontend
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      RAILWAY_TOKEN: ${{ secrets.railway_token }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Railway CI settings
+        shell: bash
+        run: |
+          test -n "${RAILWAY_TOKEN:-}" || { echo "Missing Railway token secret"; exit 1; }
+          test -n "${{ inputs.railway_environment_id }}" || { echo "Missing Railway environment id"; exit 1; }
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Railway CLI
+        run: npm install --global @railway/cli
+
+      - name: Build clean frontend deploy bundle
+        shell: bash
+        run: bash ./scripts/prepare-frontend-railway-bundle.sh "$GITHUB_WORKSPACE" "$RUNNER_TEMP/frontend-railway"
+
+      - name: Deploy frontend service
+        working-directory: ${{ runner.temp }}/frontend-railway
+        run: railway up --service "${{ inputs.frontend_service_name }}" --environment "${{ inputs.railway_environment_id }}" --ci

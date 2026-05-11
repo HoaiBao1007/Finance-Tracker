@@ -1,0 +1,25 @@
+# dependencies
+**/node_modules/
+
+# build outputs
+backend/dist/
+frontend/.next/
+frontend/out/
+.deploy/frontend-railway/
+
+# local environment files
+backend/.env
+backend/.env.local
+frontend/.env
+frontend/.env.local
+*.env.local
+
+# tooling state
+.railway/
+.vercel/
+**/*.tsbuildinfo
+
+# logs and OS files
+*.log
+.DS_Store
+Thumbs.db

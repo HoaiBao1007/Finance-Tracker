@@ -1,0 +1,93 @@
+name: Railway Staging Deploy
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - ".github/workflows/railway-deploy-reusable.yml"
+      - ".github/workflows/railway-staging.yml"
+      - "scripts/prepare-frontend-railway-bundle.sh"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Service to deploy to Railway staging
+        required: true
+        default: both
+        type: choice
+        options:
+          - backend
+          - frontend
+          - both
+
+permissions:
+  contents: read
+
+concurrency:
+  group: railway-staging-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  changes:
+    name: Resolve deploy targets
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend || steps.manual.outputs.backend || 'false' }}
+      frontend: ${{ steps.filter.outputs.frontend || steps.manual.outputs.frontend || 'false' }}
+    steps:
+      - name: Checkout repository
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
+
+      - name: Detect changed app paths
+        id: filter
+        if: github.event_name == 'push'
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/railway-deploy-reusable.yml'
+              - '.github/workflows/railway-staging.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/railway-deploy-reusable.yml'
+              - 'scripts/prepare-frontend-railway-bundle.sh'
+              - '.github/workflows/railway-staging.yml'
+
+      - name: Resolve manual target selection
+        id: manual
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          case "${{ inputs.target }}" in
+            backend)
+              echo "backend=true" >> "$GITHUB_OUTPUT"
+              echo "frontend=false" >> "$GITHUB_OUTPUT"
+              ;;
+            frontend)
+              echo "backend=false" >> "$GITHUB_OUTPUT"
+              echo "frontend=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "backend=true" >> "$GITHUB_OUTPUT"
+              echo "frontend=true" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+  deploy-staging:
+    name: Deploy staging services
+    needs: changes
+    if: needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true'
+    uses: ./.github/workflows/railway-deploy-reusable.yml
+    with:
+      railway_environment_id: ${{ vars.RAILWAY_ENVIRONMENT_ID }}
+      backend_service_name: api
+      frontend_service_name: web
+      deploy_backend: ${{ needs.changes.outputs.backend == 'true' }}
+      deploy_frontend: ${{ needs.changes.outputs.frontend == 'true' }}
+    secrets:
+      railway_token: ${{ secrets.RAILWAY_TOKEN }}

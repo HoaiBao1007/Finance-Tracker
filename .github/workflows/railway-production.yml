@@ -1,0 +1,62 @@
+name: Railway Production Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Service to deploy to Railway production
+        required: true
+        default: both
+        type: choice
+        options:
+          - backend
+          - frontend
+          - both
+
+permissions:
+  contents: read
+
+concurrency:
+  group: railway-production
+  cancel-in-progress: false
+
+jobs:
+  resolve-target:
+    name: Resolve production target
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.target.outputs.backend }}
+      frontend: ${{ steps.target.outputs.frontend }}
+    steps:
+      - name: Resolve selected target
+        id: target
+        shell: bash
+        run: |
+          case "${{ inputs.target }}" in
+            backend)
+              echo "backend=true" >> "$GITHUB_OUTPUT"
+              echo "frontend=false" >> "$GITHUB_OUTPUT"
+              ;;
+            frontend)
+              echo "backend=false" >> "$GITHUB_OUTPUT"
+              echo "frontend=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "backend=true" >> "$GITHUB_OUTPUT"
+              echo "frontend=true" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
+  deploy-production:
+    name: Deploy production services
+    needs: resolve-target
+    if: needs.resolve-target.outputs.backend == 'true' || needs.resolve-target.outputs.frontend == 'true'
+    uses: ./.github/workflows/railway-deploy-reusable.yml
+    with:
+      railway_environment_id: ${{ vars.RAILWAY_PRODUCTION_ENVIRONMENT_ID }}
+      backend_service_name: api
+      frontend_service_name: web
+      deploy_backend: ${{ needs.resolve-target.outputs.backend == 'true' }}
+      deploy_frontend: ${{ needs.resolve-target.outputs.frontend == 'true' }}
+    secrets:
+      railway_token: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
