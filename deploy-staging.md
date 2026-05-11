@@ -22,14 +22,18 @@
 ### Secrets và variables cần khai báo trên GitHub
 ```env
 RAILWAY_TOKEN="<project token cua Railway staging project>"
+RAILWAY_API_TOKEN="<account token neu muon tai su dung auth tu Railway CLI>"
 RAILWAY_ENVIRONMENT_ID="<environment id cua Railway, vi du 8d376051-7350-40f5-8806-9013f49c6fb3>"
 RAILWAY_PRODUCTION_TOKEN="<project token cua Railway production project khi san sang>"
+RAILWAY_PRODUCTION_API_TOKEN="<account token cho production neu khong dung project token>"
 RAILWAY_PRODUCTION_ENVIRONMENT_ID="<environment id cua production khi san sang>"
 ```
 
 Ghi chú:
 - `RAILWAY_TOKEN` nên là project token để quyền CI chỉ gói trong đúng staging project.
+- Nếu chưa có project token, workflow hiện cũng chấp nhận `RAILWAY_API_TOKEN`.
 - `RAILWAY_PRODUCTION_TOKEN` và `RAILWAY_PRODUCTION_ENVIRONMENT_ID` chỉ cần thêm khi bạn bắt đầu bật production workflow.
+- Production workflow cũng chấp nhận `RAILWAY_PRODUCTION_API_TOKEN` nếu bạn muốn dùng account token thay thế.
 - Workflow mặc định deploy vào service `api` và `web`. Nếu bạn đổi tên service trên Railway thì sửa trực tiếp trong workflow staging hoặc production tương ứng.
 - Biến runtime như `DATABASE_URL`, `JWT_SECRET`, `CLIENT_ORIGIN`, `NEXT_PUBLIC_API_BASE_URL` vẫn nên được quản lý trực tiếp trên Railway service, không chuyển sang GitHub Secrets nếu không cần thiết.
 - Nếu bạn bật workflow này, nên tắt Railway GitHub autodeploy cho `api` và `web` để tránh deploy trùng trên cùng một commit.

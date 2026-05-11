@@ -1,9 +1,10 @@
 # Railway GitHub Checklist
 
 ## 1. GitHub repo
-- Tạo secret `RAILWAY_TOKEN` cho staging project.
+- Tạo secret `RAILWAY_TOKEN` cho staging project nếu bạn đã có project token.
+- Hoặc tạo secret `RAILWAY_API_TOKEN` nếu muốn tái dùng account token từ Railway CLI/login hiện tại.
 - Tạo variable `RAILWAY_ENVIRONMENT_ID` cho staging environment.
-- Khi production sẵn sàng, tạo thêm secret `RAILWAY_PRODUCTION_TOKEN`.
+- Khi production sẵn sàng, tạo thêm secret `RAILWAY_PRODUCTION_TOKEN` hoặc `RAILWAY_PRODUCTION_API_TOKEN`.
 - Khi production sẵn sàng, tạo thêm variable `RAILWAY_PRODUCTION_ENVIRONMENT_ID`.
 
 ## 2. Railway dashboard

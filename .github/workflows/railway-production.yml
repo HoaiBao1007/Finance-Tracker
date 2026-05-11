@@ -60,3 +60,4 @@ jobs:
       deploy_frontend: ${{ needs.resolve-target.outputs.frontend == 'true' }}
     secrets:
       railway_token: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
+      railway_api_token: ${{ secrets.RAILWAY_PRODUCTION_API_TOKEN }}

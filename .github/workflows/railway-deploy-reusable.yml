@@ -30,7 +30,10 @@ on:
     secrets:
       railway_token:
         description: Railway project token used by CI/CD
-        required: true
+        required: false
+      railway_api_token:
+        description: Railway account token used by CI/CD when a project token is not available
+        required: false
 
 permissions:
   contents: read
@@ -43,6 +46,7 @@ jobs:
     timeout-minutes: 30
     env:
       RAILWAY_TOKEN: ${{ secrets.railway_token }}
+      RAILWAY_API_TOKEN: ${{ secrets.railway_api_token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -50,7 +54,10 @@ jobs:
       - name: Validate Railway CI settings
         shell: bash
         run: |
-          test -n "${RAILWAY_TOKEN:-}" || { echo "Missing Railway token secret"; exit 1; }
+          if [ -z "${RAILWAY_TOKEN:-}" ] && [ -z "${RAILWAY_API_TOKEN:-}" ]; then
+            echo "Missing Railway token secret"
+            exit 1
+          fi
           test -n "${{ inputs.railway_environment_id }}" || { echo "Missing Railway environment id"; exit 1; }
 
       - name: Setup Node.js
@@ -72,6 +79,7 @@ jobs:
     timeout-minutes: 30
     env:
       RAILWAY_TOKEN: ${{ secrets.railway_token }}
+      RAILWAY_API_TOKEN: ${{ secrets.railway_api_token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -79,7 +87,10 @@ jobs:
       - name: Validate Railway CI settings
         shell: bash
         run: |
-          test -n "${RAILWAY_TOKEN:-}" || { echo "Missing Railway token secret"; exit 1; }
+          if [ -z "${RAILWAY_TOKEN:-}" ] && [ -z "${RAILWAY_API_TOKEN:-}" ]; then
+            echo "Missing Railway token secret"
+            exit 1
+          fi
           test -n "${{ inputs.railway_environment_id }}" || { echo "Missing Railway environment id"; exit 1; }
 
       - name: Setup Node.js
