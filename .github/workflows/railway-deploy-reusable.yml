@@ -44,12 +44,24 @@ jobs:
     if: inputs.deploy_backend
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN || secrets.railway_token || secrets.RAILWAY_API_TOKEN || secrets.railway_api_token }}
-      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN || secrets.railway_api_token || secrets.RAILWAY_TOKEN || secrets.railway_token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Export Railway auth environment
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.RAILWAY_TOKEN }}" ]; then
+            echo "RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}" >> "$GITHUB_ENV"
+          elif [ -n "${{ secrets.railway_token }}" ]; then
+            echo "RAILWAY_TOKEN=${{ secrets.railway_token }}" >> "$GITHUB_ENV"
+          fi
+
+          if [ -n "${{ secrets.RAILWAY_API_TOKEN }}" ]; then
+            echo "RAILWAY_API_TOKEN=${{ secrets.RAILWAY_API_TOKEN }}" >> "$GITHUB_ENV"
+          elif [ -n "${{ secrets.railway_api_token }}" ]; then
+            echo "RAILWAY_API_TOKEN=${{ secrets.railway_api_token }}" >> "$GITHUB_ENV"
+          fi
 
       - name: Validate Railway CI settings
         shell: bash
@@ -77,12 +89,24 @@ jobs:
     if: inputs.deploy_frontend
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN || secrets.railway_token || secrets.RAILWAY_API_TOKEN || secrets.railway_api_token }}
-      RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN || secrets.railway_api_token || secrets.RAILWAY_TOKEN || secrets.railway_token }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Export Railway auth environment
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.RAILWAY_TOKEN }}" ]; then
+            echo "RAILWAY_TOKEN=${{ secrets.RAILWAY_TOKEN }}" >> "$GITHUB_ENV"
+          elif [ -n "${{ secrets.railway_token }}" ]; then
+            echo "RAILWAY_TOKEN=${{ secrets.railway_token }}" >> "$GITHUB_ENV"
+          fi
+
+          if [ -n "${{ secrets.RAILWAY_API_TOKEN }}" ]; then
+            echo "RAILWAY_API_TOKEN=${{ secrets.RAILWAY_API_TOKEN }}" >> "$GITHUB_ENV"
+          elif [ -n "${{ secrets.railway_api_token }}" ]; then
+            echo "RAILWAY_API_TOKEN=${{ secrets.railway_api_token }}" >> "$GITHUB_ENV"
+          fi
 
       - name: Validate Railway CI settings
         shell: bash
