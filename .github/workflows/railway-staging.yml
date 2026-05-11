@@ -90,4 +90,5 @@ jobs:
       frontend_service_name: web
       deploy_backend: ${{ needs.changes.outputs.backend == 'true' }}
       deploy_frontend: ${{ needs.changes.outputs.frontend == 'true' }}
-    secrets: inherit
+    secrets:
+      railway_token: ${{ secrets.RAILWAY_TOKEN }}
