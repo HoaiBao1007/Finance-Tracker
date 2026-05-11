@@ -58,6 +58,4 @@ jobs:
       frontend_service_name: web
       deploy_backend: ${{ needs.resolve-target.outputs.backend == 'true' }}
       deploy_frontend: ${{ needs.resolve-target.outputs.frontend == 'true' }}
-    secrets:
-      railway_token: ${{ secrets.RAILWAY_PRODUCTION_TOKEN }}
-      railway_api_token: ${{ secrets.RAILWAY_PRODUCTION_API_TOKEN }}
+    secrets: inherit
