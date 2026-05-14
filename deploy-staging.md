@@ -1,5 +1,9 @@
 # Staging Deploy Guide
 
+Ghi chú:
+- Tài liệu này mô tả flow staging cũ khi cả backend và frontend đều chạy trên Railway.
+- Nếu bạn đang deploy theo kiến trúc mới `Vercel + Neon + Railway backend`, dùng [deploy-vercel-neon-railway.md](deploy-vercel-neon-railway.md) và [deploy-vercel-neon-checklist.md](deploy-vercel-neon-checklist.md).
+
 ## Stack được chốt
 - Backend API: Railway
 - PostgreSQL: Railway PostgreSQL

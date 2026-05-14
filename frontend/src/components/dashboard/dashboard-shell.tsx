@@ -1,34 +1,32 @@
 "use client";
 
+import { AccountSettingsCard } from "@/components/dashboard/account-settings-card";
+import { BackendConnectionCard } from "@/components/dashboard/backend-connection-card";
 import { BudgetHealthBanner } from "@/components/dashboard/budget-health-banner";
 import { BudgetModal } from "@/components/dashboard/budget-modal";
 import { BudgetSection } from "@/components/dashboard/budget-section";
-import { DashboardSidebar } from "@/components/dashboard/dashboard-sidebar";
 import { ExpensePieChart } from "@/components/dashboard/expense-pie-chart";
 import { IncomeExpenseBarChart } from "@/components/dashboard/income-expense-bar-chart";
 import { SummaryCard } from "@/components/dashboard/summary-card";
 import { TransactionModal } from "@/components/dashboard/transaction-modal";
 import { TransactionsTable } from "@/components/dashboard/transactions-table";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Sheet } from "@/components/ui/sheet";
 import { Toast, type ToastState } from "@/components/ui/toast";
 import { financeApi } from "@/lib/api";
 import { getDashboardLiveBundle } from "@/lib/dashboard-data";
 import { formatDateRange, formatMonthLabel } from "@/lib/format";
 import type { BudgetFormValues } from "@/schemas/budget-form.schema";
+import type { TransactionFormValues } from "@/schemas/transaction-form.schema";
 import type {
   AuthPayload,
   AuthUser,
   Budget,
+  BudgetCreateInput,
   Category,
   DashboardSnapshot,
-  BudgetCreateInput,
   Transaction,
   TransactionCreateInput,
 } from "@/types/finance";
-import type { TransactionFormValues } from "@/schemas/transaction-form.schema";
 import { useEffect, useRef, useState } from "react";
 
 const ACCESS_TOKEN_STORAGE_KEY = "finance-tracker.access-token";
@@ -68,20 +66,6 @@ function toBudgetPayload(
 }
 
 type AuthMode = "login" | "register";
-type DashboardSectionId = "overview" | "reports" | "budgets" | "transactions";
-
-const DASHBOARD_SECTION_IDS: DashboardSectionId[] = [
-  "overview",
-  "reports",
-  "budgets",
-  "transactions",
-];
-
-function getDashboardSectionFromHash(hash: string): DashboardSectionId | null {
-  const normalizedHash = hash.replace(/^#/, "");
-
-  return DASHBOARD_SECTION_IDS.find((sectionId) => sectionId === normalizedHash) ?? null;
-}
 
 export function DashboardShell({ data: initialData }: DashboardShellProps) {
   const [dashboardData, setDashboardData] = useState(initialData);
@@ -100,8 +84,6 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
   const [isSubmittingBudget, setIsSubmittingBudget] = useState(false);
   const [deletingBudgetId, setDeletingBudgetId] = useState<string | null>(null);
   const [toastQueue, setToastQueue] = useState<ToastState[]>([]);
-  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState<DashboardSectionId>("overview");
   const nextToastIdRef = useRef(0);
 
   useEffect(() => {
@@ -165,81 +147,6 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
     };
   }, [authToken, initialData]);
 
-  useEffect(() => {
-    function updateActiveSection() {
-      const threshold = 160;
-      let nextActiveSection: DashboardSectionId = DASHBOARD_SECTION_IDS[0];
-
-      for (const sectionId of DASHBOARD_SECTION_IDS) {
-        const element = document.getElementById(`dashboard-section-${sectionId}`);
-
-        if (!element) {
-          continue;
-        }
-
-        const rect = element.getBoundingClientRect();
-
-        if (rect.top <= threshold) {
-          nextActiveSection = sectionId;
-        }
-      }
-
-      setActiveSection((currentSection) =>
-        currentSection === nextActiveSection ? currentSection : nextActiveSection,
-      );
-    }
-
-    updateActiveSection();
-    window.addEventListener("scroll", updateActiveSection, { passive: true });
-    window.addEventListener("resize", updateActiveSection);
-
-    return () => {
-      window.removeEventListener("scroll", updateActiveSection);
-      window.removeEventListener("resize", updateActiveSection);
-    };
-  }, []);
-
-  useEffect(() => {
-    function syncSectionFromHash() {
-      const sectionFromHash = getDashboardSectionFromHash(window.location.hash);
-
-      if (!sectionFromHash) {
-        return;
-      }
-
-      const element = document.getElementById(`dashboard-section-${sectionFromHash}`);
-
-      if (!element) {
-        return;
-      }
-
-      setActiveSection(sectionFromHash);
-      element.scrollIntoView({ behavior: "auto", block: "start" });
-    }
-
-    const frameId = window.requestAnimationFrame(syncSectionFromHash);
-    window.addEventListener("hashchange", syncSectionFromHash);
-
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.removeEventListener("hashchange", syncSectionFromHash);
-    };
-  }, []);
-
-  useEffect(() => {
-    const nextHash = `#${activeSection}`;
-
-    if (window.location.hash === nextHash) {
-      return;
-    }
-
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${window.location.pathname}${window.location.search}${nextHash}`,
-    );
-  }, [activeSection]);
-
   const expenseCategories = categories.filter((category) => category.type === "expense");
   const canManageTransactions = Boolean(authToken && currentUser && categories.length > 0);
   const canManageBudgets = Boolean(authToken && currentUser && expenseCategories.length > 0);
@@ -252,50 +159,12 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
     dashboardData.summary.period.to,
   );
   const sourceLabel = dashboardData.source === "api" ? "API live" : "Mock mode";
-  const navigationItems = [
-    {
-      sectionId: "overview" as const,
-      label: "Dashboard",
-      caption: "Tổng quan số dư, thu chi và cảnh báo budget",
-      active: activeSection === "overview",
-    },
-    {
-      sectionId: "reports" as const,
-      label: "Báo cáo",
-      caption: "Pie chart và xu hướng 6 tháng theo kỳ đang chọn",
-      active: activeSection === "reports",
-    },
-    {
-      sectionId: "budgets" as const,
-      label: "Ngân sách",
-      caption: `${dashboardData.budgets.length} danh mục đang được theo dõi`,
-      active: activeSection === "budgets",
-    },
-    {
-      sectionId: "transactions" as const,
-      label: "Giao dịch",
-      caption: `${dashboardData.recentTransactions.length} giao dịch gần nhất đang hiển thị`,
-      active: activeSection === "transactions",
-    },
-  ];
-
-  function handleSidebarNavigate(sectionId: string) {
-    const nextSectionId = sectionId as DashboardSectionId;
-    const element = document.getElementById(`dashboard-section-${nextSectionId}`);
-
-    if (!element) {
-      return;
-    }
-
-    setActiveSection(nextSectionId);
-    window.history.replaceState(
-      window.history.state,
-      "",
-      `${window.location.pathname}${window.location.search}#${nextSectionId}`,
-    );
-    element.scrollIntoView({ behavior: "smooth", block: "start" });
-    setIsMobileSidebarOpen(false);
-  }
+  const greetingName = currentUser?.fullName ?? "bạn";
+  const recentTransactions = dashboardData.recentTransactions.slice(0, 5);
+  const sourceDescription =
+    dashboardData.source === "api"
+      ? "Đã kết nối dữ liệu thật từ backend và sẵn sàng CRUD ngay trên dashboard."
+      : "Đang dùng dataset mẫu để hoàn thiện trải nghiệm giao diện trước khi đồng bộ backend.";
 
   function showToast(tone: ToastState["tone"], title: string, message: string) {
     nextToastIdRef.current += 1;
@@ -398,6 +267,11 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
       "Đã đăng xuất",
       "Access token đã được gỡ khỏi trình duyệt và dashboard đã quay về mock mode.",
     );
+  }
+
+  function handleProfileUpdated(user: AuthUser) {
+    setCurrentUser(user);
+    setHelperMessage(`Hồ sơ của ${user.email} đã được cập nhật.`);
   }
 
   function openCreateBudgetModal() {
@@ -582,7 +456,11 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
     try {
       await financeApi.deleteBudget(budget.id, authToken);
       await refreshLiveData({ silentSuccess: true });
-      showToast("success", "Đã xóa ngân sách", "Trạng thái ngân sách đã được làm mới trên dashboard.");
+      showToast(
+        "success",
+        "Đã xóa ngân sách",
+        "Trạng thái ngân sách đã được làm mới trên dashboard.",
+      );
     } catch (error) {
       const message = getErrorMessage(error);
       setErrorMessage(message);
@@ -594,197 +472,144 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
 
   return (
     <>
-      <main className="min-h-screen px-3 py-3 sm:px-4 lg:px-6 lg:py-6">
-        <div className="mx-auto flex max-w-[1600px] flex-col gap-6 lg:min-h-[calc(100vh-3rem)] lg:flex-row">
-          <aside className="hidden lg:sticky lg:top-6 lg:block lg:w-[320px] lg:self-start">
-            <DashboardSidebar
-              navigationItems={navigationItems}
-              sourceLabel={sourceLabel}
-              budgetPeriodLabel={budgetPeriodLabel}
-              currentPeriodLabel={currentPeriodLabel}
-              recentTransactionsCount={dashboardData.recentTransactions.length}
-              filters={dashboardData.filters}
-              source={dashboardData.source}
-              currentUser={currentUser}
-              isSyncing={isSyncing}
-              errorMessage={errorMessage}
-              helperMessage={helperMessage}
-              onAuthenticated={handleAuthenticated}
-              onDisconnect={handleDisconnectToken}
-              onRefresh={() => void refreshLiveData({ trigger: "manual" })}
-              onNavigate={handleSidebarNavigate}
-            />
-          </aside>
-
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-col gap-6">
-              <Card className="border-slate-200/80 bg-white/90 shadow-[0_16px_40px_rgba(15,23,42,0.06)] lg:hidden">
-                <CardContent className="flex items-center justify-between gap-4 p-4">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
-                      Dashboard mobile
-                    </p>
-                    <p className="mt-2 text-base font-semibold text-slate-950">
-                      {sourceLabel} · {budgetPeriodLabel}
-                    </p>
+      <main className="min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
+        <div className="mx-auto max-w-[1440px] space-y-6 lg:space-y-8">
+          <section className="panel relative overflow-hidden rounded-[40px] bg-[linear-gradient(135deg,#ffffff_0%,#f7fbff_58%,#f1f8ff_100%)] px-6 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+            <div className="relative flex flex-col gap-8">
+              <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+                <div className="max-w-3xl">
+                  <Badge className="bg-slate-900 text-white">Dashboard cá nhân</Badge>
+                  <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
+                    Chào {greetingName}!
+                  </h1>
+                  <p className="mt-4 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
+                    Một bố cục grid sáng, gọn và dễ quét để bạn theo dõi số dư, xu hướng thu chi và các giao dịch mới nhất mà không bị rối mắt.
+                  </p>
+                  <div className="mt-5 flex flex-wrap gap-3 text-sm text-slate-600">
+                    <span className="rounded-full border border-slate-200 bg-white/80 px-4 py-2">
+                      {budgetPeriodLabel}
+                    </span>
+                    <span className="rounded-full border border-slate-200 bg-white/80 px-4 py-2">
+                      {sourceLabel}
+                    </span>
+                    <span className="rounded-full border border-slate-200 bg-white/80 px-4 py-2">
+                      {currentUser?.email ?? "Chưa đăng nhập"}
+                    </span>
                   </div>
-                  <Button
-                    aria-label="Mở sidebar dashboard"
-                    className="rounded-2xl px-3"
-                    size="icon"
-                    variant="outline"
-                    onClick={() => setIsMobileSidebarOpen(true)}
+                </div>
+
+                <div className="flex w-full flex-col gap-3 xl:max-w-[320px] xl:items-stretch">
+                  <div className="rounded-[28px] border border-white/90 bg-white/90 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+                    <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Tổng quan kỳ</p>
+                    <p className="mt-3 text-lg font-semibold text-slate-950">{currentPeriodLabel}</p>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{sourceDescription}</p>
+                  </div>
+                  <button
+                    className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(37,99,235,0.25)] transition hover:bg-blue-500"
+                    type="button"
+                    onClick={openCreateTransactionModal}
                   >
-                    <svg
-                      aria-hidden="true"
-                      className="h-5 w-5"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="1.8"
-                      viewBox="0 0 24 24"
-                    >
-                      <path d="M4 7h16" />
-                      <path d="M4 12h16" />
-                      <path d="M4 17h16" />
-                    </svg>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card
-                className="relative overflow-hidden rounded-[36px] border-slate-200/80 bg-white/80 shadow-[0_26px_90px_rgba(15,23,42,0.08)] scroll-mt-24"
-                id="dashboard-section-overview"
-              >
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(30,41,59,0.08),transparent_35%)]" />
-                <CardContent className="relative p-6 sm:p-8">
-                  <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-                    <div className="max-w-3xl">
-                      <Badge className="bg-slate-800 text-slate-50">Tổng quan dashboard</Badge>
-                      <h2 className="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
-                        Bố cục mới ưu tiên số dư ở trên cùng và biểu đồ chi tiêu ở trung tâm màn hình
-                      </h2>
-                      <p className="mt-4 text-base leading-7 text-slate-600">
-                        Khung dashboard giờ tách điều hướng sang sidebar trái, gom thẻ tổng quan lên đầu trang, và dành phần ngang lớn nhất cho biểu đồ chi tiêu để việc đọc dữ liệu nhanh hơn khi demo hoặc tích hợp backend thật.
-                      </p>
-                    </div>
-
-                    <div className="grid gap-3 sm:grid-cols-2 xl:min-w-[360px]">
-                      <Card className="border-slate-200 bg-slate-50/85 shadow-none">
-                        <CardContent className="p-4">
-                          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Nguồn hiện tại</p>
-                          <p className="mt-2 text-lg font-semibold text-slate-950">{sourceLabel}</p>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">
-                            {dashboardData.source === "api"
-                              ? "Đã kết nối dữ liệu thật từ backend và sẵn sàng thao tác CRUD."
-                              : "Đang dùng mock dataset để dựng layout và kiểm tra giao diện."}
-                          </p>
-                        </CardContent>
-                      </Card>
-                      <Card className="border-slate-200 bg-slate-50/85 shadow-none">
-                        <CardContent className="p-4">
-                          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Người dùng / Chu kỳ</p>
-                          <p className="mt-2 text-lg font-semibold text-slate-950">
-                            {currentUser?.fullName ?? "Khách demo"}
-                          </p>
-                          <p className="mt-2 text-sm leading-6 text-slate-600">{currentPeriodLabel}</p>
-                        </CardContent>
-                      </Card>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 grid gap-4 xl:grid-cols-3">
-                    <SummaryCard
-                      label="Số dư"
-                      value={dashboardData.summary.balance}
-                      caption="Số dư ròng của kỳ đang xem, đặt ở đầu trang để nhìn thấy ngay khi mở dashboard."
-                      tone="balance"
-                    />
-                    <SummaryCard
-                      label="Tổng thu"
-                      value={dashboardData.summary.totalIncome}
-                      caption="Dòng tiền vào của kỳ hiện tại, dùng màu xanh lá cho trạng thái tích cực."
-                      tone="income"
-                    />
-                    <SummaryCard
-                      label="Tổng chi"
-                      value={dashboardData.summary.totalExpense}
-                      caption="Dòng tiền ra trong kỳ, dùng màu đỏ để nhấn vùng tiêu cực hoặc cần theo dõi kỹ."
-                      tone="expense"
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <BudgetHealthBanner budgets={dashboardData.budgets} periodLabel={budgetPeriodLabel} />
-
-              <section
-                className="grid gap-4 scroll-mt-24 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]"
-                id="dashboard-section-reports"
-              >
-                <ExpensePieChart
-                  items={dashboardData.expenseByCategory.categories}
-                  totalExpense={dashboardData.expenseByCategory.totalExpense}
-                />
-                <IncomeExpenseBarChart
-                  items={dashboardData.monthlyTrend.months}
-                  source={dashboardData.source}
-                />
-              </section>
-
-              <div className="scroll-mt-24" id="dashboard-section-budgets">
-                <BudgetSection
-                  budgets={dashboardData.budgets}
-                  canManage={canManageBudgets}
-                  periodLabel={budgetPeriodLabel}
-                  deletingBudgetId={deletingBudgetId}
-                  onCreate={openCreateBudgetModal}
-                  onEdit={openEditBudgetModal}
-                  onDelete={handleDeleteBudget}
-                />
+                    Thêm Giao dịch
+                  </button>
+                </div>
               </div>
 
-              <div className="scroll-mt-24" id="dashboard-section-transactions">
-                <TransactionsTable
-                  transactions={dashboardData.recentTransactions}
-                  canManage={canManageTransactions}
-                  deletingTransactionId={deletingTransactionId}
-                  onCreate={openCreateTransactionModal}
-                  onEdit={openEditTransactionModal}
-                  onDelete={handleDeleteTransaction}
+              {helperMessage ? (
+                <div className="rounded-[24px] border border-emerald-100 bg-emerald-50/90 px-5 py-4 text-sm text-emerald-700">
+                  {helperMessage}
+                </div>
+              ) : null}
+              {errorMessage ? (
+                <div className="rounded-[24px] border border-rose-100 bg-rose-50/90 px-5 py-4 text-sm text-rose-700">
+                  {errorMessage}
+                </div>
+              ) : null}
+
+              <div className="grid gap-4 xl:grid-cols-3">
+                <SummaryCard
+                  staggerIndex={0}
+                  animateCount
+                  label="Tổng số dư"
+                  value={dashboardData.summary.balance}
+                  caption="Số dư ròng hiện tại của tháng đang xem, ưu tiên đặt trên cùng để nắm tình hình ngay khi mở trang."
+                  tone="balance"
+                />
+                <SummaryCard
+                  staggerIndex={1}
+                  label="Thu nhập tháng"
+                  value={dashboardData.summary.totalIncome}
+                  caption="Toàn bộ khoản tiền vào trong tháng, dùng sắc xanh lá để nhấn trạng thái tích cực."
+                  tone="income"
+                />
+                <SummaryCard
+                  staggerIndex={2}
+                  label="Chi tiêu tháng"
+                  value={dashboardData.summary.totalExpense}
+                  caption="Tổng chi trong tháng, dùng sắc đỏ dịu để cảnh báo vùng cần theo dõi kỹ hơn."
+                  tone="expense"
                 />
               </div>
             </div>
-          </div>
+          </section>
+
+          <section className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+            <IncomeExpenseBarChart
+              items={dashboardData.monthlyTrend.months}
+              source={dashboardData.source}
+            />
+            <ExpensePieChart
+              items={dashboardData.expenseByCategory.categories}
+              totalExpense={dashboardData.expenseByCategory.totalExpense}
+            />
+          </section>
+
+          <TransactionsTable
+            transactions={recentTransactions}
+            canManage={canManageTransactions}
+            deletingTransactionId={deletingTransactionId}
+            onCreate={openCreateTransactionModal}
+            onEdit={openEditTransactionModal}
+            onDelete={handleDeleteTransaction}
+          />
+
+          <section className="grid gap-6 xl:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.4fr)]">
+            <div className="space-y-6">
+              <BackendConnectionCard
+                currentUser={currentUser}
+                source={dashboardData.source}
+                periodLabel={budgetPeriodLabel}
+                isLoading={isSyncing}
+                errorMessage={errorMessage}
+                helperMessage={helperMessage}
+                onAuthenticated={handleAuthenticated}
+                onDisconnect={handleDisconnectToken}
+                onRefresh={() => void refreshLiveData({ trigger: "manual" })}
+              />
+
+              <AccountSettingsCard
+                authToken={authToken}
+                currentUser={currentUser}
+                onError={setErrorMessage}
+                onProfileUpdated={handleProfileUpdated}
+                onSuccess={(title, message) => showToast("success", title, message)}
+              />
+            </div>
+
+            <div className="space-y-6">
+              <BudgetHealthBanner budgets={dashboardData.budgets} periodLabel={budgetPeriodLabel} />
+              <BudgetSection
+                budgets={dashboardData.budgets}
+                canManage={canManageBudgets}
+                periodLabel={budgetPeriodLabel}
+                deletingBudgetId={deletingBudgetId}
+                onCreate={openCreateBudgetModal}
+                onEdit={openEditBudgetModal}
+                onDelete={handleDeleteBudget}
+              />
+            </div>
+          </section>
         </div>
       </main>
-
-      <Sheet
-        open={isMobileSidebarOpen}
-        onOpenChange={setIsMobileSidebarOpen}
-        title="Điều hướng dashboard"
-        description="Mở sidebar trên mobile để đổi kỳ, xem trạng thái và kết nối backend."
-      >
-        <DashboardSidebar
-          navigationItems={navigationItems}
-          sourceLabel={sourceLabel}
-          budgetPeriodLabel={budgetPeriodLabel}
-          currentPeriodLabel={currentPeriodLabel}
-          recentTransactionsCount={dashboardData.recentTransactions.length}
-          filters={dashboardData.filters}
-          source={dashboardData.source}
-          currentUser={currentUser}
-          isSyncing={isSyncing}
-          errorMessage={errorMessage}
-          helperMessage={helperMessage}
-          onAuthenticated={handleAuthenticated}
-          onDisconnect={handleDisconnectToken}
-          onRefresh={() => void refreshLiveData({ trigger: "manual" })}
-          onNavigate={handleSidebarNavigate}
-          variant="mobile"
-        />
-      </Sheet>
 
       <BudgetModal
         isOpen={isBudgetModalOpen}

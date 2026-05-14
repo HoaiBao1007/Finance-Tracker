@@ -9,6 +9,7 @@ export interface AuthUser {
   id: string;
   email: string;
   fullName: string;
+  avatarUrl?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -16,6 +17,31 @@ export interface AuthUser {
 export interface AuthPayload {
   user: AuthUser;
   accessToken: string;
+}
+
+export interface ProfileUpdateInput {
+  fullName?: string;
+  avatarUrl?: string | null;
+}
+
+export interface ChangePasswordInput {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface PasswordResetRequestInput {
+  email: string;
+}
+
+export interface PasswordResetRequestResult {
+  delivered: boolean;
+  expiresAt: string | null;
+}
+
+export interface ResetPasswordInput {
+  email: string;
+  token: string;
+  newPassword: string;
 }
 
 export interface CategoryReference {

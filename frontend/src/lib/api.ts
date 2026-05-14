@@ -14,12 +14,17 @@ import type {
   MonthlyTrendQuery,
   MonthlyTrendReport,
   PaginationMeta,
+  PasswordResetRequestInput,
+  PasswordResetRequestResult,
+  ProfileUpdateInput,
   ReportFilters,
+  ResetPasswordInput,
   SummaryReport,
   Transaction,
   TransactionCreateInput,
   TransactionListQuery,
   TransactionUpdateInput,
+  ChangePasswordInput,
 } from "@/types/finance";
 
 type RequestOptions = {
@@ -101,8 +106,30 @@ export const financeApi = {
   login: (body: { email: string; password: string }) =>
     request<AuthPayload>("/auth/login", { method: "POST", body }),
 
+  requestPasswordReset: (body: PasswordResetRequestInput) =>
+    request<PasswordResetRequestResult>("/auth/forgot-password", {
+      method: "POST",
+      body,
+    }),
+
+  resetPassword: (body: ResetPasswordInput) =>
+    request<{ success: true }>("/auth/reset-password", {
+      method: "POST",
+      body,
+    }),
+
   getCurrentUser: (token: string) =>
     request<AuthUser>("/auth/me", { token }),
+
+  updateProfile: (body: ProfileUpdateInput, token: string) =>
+    request<AuthUser>("/auth/profile", { method: "PATCH", body, token }),
+
+  changePassword: (body: ChangePasswordInput, token: string) =>
+    request<{ success: true }>("/auth/change-password", {
+      method: "POST",
+      body,
+      token,
+    }),
 
   getDashboardBundle: (
     query: { month?: number; year?: number; months?: number },

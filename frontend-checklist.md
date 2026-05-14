@@ -15,6 +15,8 @@
 
 ## Phase 2 - API Layer và Types
 - [x] Tạo type cho auth response nếu cần.
+- [x] Mở rộng type auth user cho avatar/profile.
+- [x] Thêm type cho đổi mật khẩu và quên mật khẩu bằng OTP.
 - [x] Tạo type cho category.
 - [x] Tạo type cho transaction.
 - [x] Tạo type cho budget nếu cần hiển thị.
@@ -29,6 +31,10 @@
 - [x] Viết function gọi `PATCH /transactions/:id`.
 - [x] Viết function gọi `DELETE /transactions/:id`.
 - [x] Viết function gọi `GET /categories`.
+- [x] Viết function gọi `PATCH /auth/profile`.
+- [x] Viết function gọi `POST /auth/change-password`.
+- [x] Viết function gọi `POST /auth/forgot-password`.
+- [x] Viết function gọi `POST /auth/reset-password`.
 
 ## Phase 3 - Dashboard Shell
 - [x] Tạo trang `app/dashboard/page.tsx`.
@@ -37,6 +43,9 @@
 - [x] Tạo empty state.
 - [x] Tạo error state.
 - [x] Tổ chức fetch dữ liệu dashboard theo một flow rõ ràng.
+- [x] Thêm thẻ tài khoản để cập nhật avatar và hồ sơ ngay trong dashboard.
+- [x] Thêm flow quên mật khẩu và nhập OTP ngay trong card kết nối backend.
+- [x] Thêm form đổi mật khẩu trong card tài khoản cho user đã đăng nhập.
 
 ## Phase 4 - Summary Cards
 - [x] Tạo component Summary Cards.

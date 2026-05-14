@@ -25,40 +25,38 @@ export function BudgetSection({
   const stats = getBudgetHealthOverview(budgets);
 
   return (
-    <section className="panel rounded-[32px] p-6">
+    <section className="rounded-[34px] border border-slate-200/90 bg-white p-6 shadow-[0_24px_72px_rgba(15,23,42,0.07)] sm:p-7">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="eyebrow">Budget planning</p>
-          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950">
+          <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-[2rem]">
             Ngân sách theo danh mục
           </h2>
-        </div>
-        <div className="flex flex-col items-start gap-3 sm:items-end">
-          <p className="text-sm leading-6 text-slate-600">
-            Đang xem ngân sách của kỳ {periodLabel}.
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Theo dõi hạn mức, phần đã dùng và vùng cảnh báo cho từng nhóm chi tiêu trong kỳ hiện tại.
           </p>
-          <button
-            className="rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-300"
-            type="button"
-            onClick={onCreate}
-            disabled={!canManage}
-          >
-            Thêm ngân sách
-          </button>
         </div>
+        <button
+          className="rounded-full bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+          type="button"
+          onClick={onCreate}
+          disabled={!canManage}
+        >
+          Thêm ngân sách
+        </button>
       </div>
 
       {budgets.length > 0 ? (
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-rose-50 px-4 py-4 text-sm text-rose-900">
+          <div className="rounded-[24px] border border-rose-100 bg-rose-50 px-4 py-4 text-sm text-rose-900">
             <p className="text-xs uppercase tracking-[0.2em] text-rose-700">Vượt mức</p>
             <p className="mt-2 text-2xl font-semibold">{stats.exceededCount}</p>
           </div>
-          <div className="rounded-2xl bg-amber-50 px-4 py-4 text-sm text-amber-900">
+          <div className="rounded-[24px] border border-amber-100 bg-amber-50 px-4 py-4 text-sm text-amber-900">
             <p className="text-xs uppercase tracking-[0.2em] text-amber-700">Sát ngưỡng</p>
             <p className="mt-2 text-2xl font-semibold">{stats.warningCount}</p>
           </div>
-          <div className="rounded-2xl bg-emerald-50 px-4 py-4 text-sm text-emerald-900">
+          <div className="rounded-[24px] border border-emerald-100 bg-emerald-50 px-4 py-4 text-sm text-emerald-900">
             <p className="text-xs uppercase tracking-[0.2em] text-emerald-700">An toàn</p>
             <p className="mt-2 text-2xl font-semibold">{stats.healthyCount}</p>
           </div>
@@ -79,16 +77,16 @@ export function BudgetSection({
           />
         </div>
       ) : (
-        <div className="mt-6 overflow-x-auto">
-          <table className="min-w-full border-separate border-spacing-y-3 text-left">
-            <thead>
+        <div className="mt-6 overflow-x-auto rounded-[28px] border border-slate-200">
+          <table className="min-w-full border-collapse text-left">
+            <thead className="bg-slate-50/90">
               <tr className="text-xs uppercase tracking-[0.22em] text-slate-500">
-                <th className="pb-2 pr-4">Danh mục</th>
-                <th className="pb-2 pr-4">Đã chi / Hạn mức</th>
-                <th className="pb-2 pr-4">Còn lại</th>
-                <th className="pb-2 pr-4">Trạng thái</th>
-                <th className="pb-2 pr-4">Cập nhật</th>
-                <th className="pb-2">Thao tác</th>
+                <th className="px-5 py-4">Danh mục</th>
+                <th className="px-5 py-4">Đã chi / Hạn mức</th>
+                <th className="px-5 py-4">Còn lại</th>
+                <th className="px-5 py-4">Trạng thái</th>
+                <th className="px-5 py-4">Cập nhật</th>
+                <th className="px-5 py-4">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -98,21 +96,21 @@ export function BudgetSection({
                 return (
                   <tr
                     key={budget.id}
-                    className={`rounded-2xl ${
+                    className={`border-t border-slate-100 ${
                       status.tone === "exceeded"
-                        ? "bg-rose-50/95"
+                        ? "bg-rose-50/70"
                         : status.tone === "warning"
-                          ? "bg-amber-50/95"
-                          : "bg-white/85"
+                          ? "bg-amber-50/70"
+                          : "bg-white"
                     }`}
                   >
-                    <td className="rounded-l-2xl px-4 py-4 text-sm font-medium text-slate-900">
+                    <td className="px-5 py-4 text-sm font-medium text-slate-900">
                       <div className="flex flex-col gap-1">
                         <span>{budget.category.name}</span>
                         <span className="text-xs text-slate-500">Kỳ {periodLabel}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-700">
+                    <td className="px-5 py-4 text-sm text-slate-700">
                       <div className="min-w-44">
                         <div className="flex items-center justify-between gap-3 text-sm font-semibold text-slate-950">
                           <span>{formatMoney(budget.spentAmount)}</span>
@@ -136,7 +134,7 @@ export function BudgetSection({
                       </div>
                     </td>
                     <td
-                      className={`px-4 py-4 text-sm font-semibold ${
+                      className={`px-5 py-4 text-sm font-semibold ${
                         moneyToBigInt(budget.remainingAmount) < BigInt(0)
                           ? "text-rose-700"
                           : "text-slate-950"
@@ -144,7 +142,7 @@ export function BudgetSection({
                     >
                       {formatMoney(budget.remainingAmount)}
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-600">
+                    <td className="px-5 py-4 text-sm text-slate-600">
                       <div className="flex flex-col gap-2">
                         <span
                           className={`inline-flex w-fit rounded-full px-3 py-1 text-xs font-semibold ${
@@ -160,10 +158,10 @@ export function BudgetSection({
                         <span className="text-xs text-slate-500">{status.caption}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-4 text-sm text-slate-600">
+                    <td className="px-5 py-4 text-sm text-slate-600">
                       {formatDate(budget.updatedAt)}
                     </td>
-                    <td className="rounded-r-2xl px-4 py-4 text-sm text-slate-600">
+                    <td className="px-5 py-4 text-sm text-slate-600">
                       <div className="flex flex-wrap gap-2">
                         <button
                           className="rounded-full border border-slate-300 px-3 py-1.5 font-medium text-slate-700 transition hover:border-slate-500 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"

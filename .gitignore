@@ -8,11 +8,10 @@ frontend/out/
 .deploy/frontend-railway/
 
 # local environment files
-backend/.env
-backend/.env.local
-frontend/.env
-frontend/.env.local
-*.env.local
+.env
+.env.*
+!.env.example
+!.env.*.example
 
 # tooling state
 .railway/

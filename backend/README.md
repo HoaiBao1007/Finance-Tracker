@@ -11,7 +11,7 @@ Backend API cho ứng dụng Personal Finance Tracker, xây bằng Node.js, Expr
 - JWT authentication
 
 ## Tính năng hiện có
-- Auth: register, login, get current user
+- Auth: register, login, get current user, update profile, change password, forgot/reset password with email OTP
 - Categories: lấy danh sách category, tạo category cá nhân
 - Transactions: CRUD, filter theo tháng/năm hoặc khoảng ngày, pagination
 - Budgets: CRUD theo category và kỳ tháng/năm
@@ -56,10 +56,35 @@ Tạo file `.env` từ `.env.example`.
 NODE_ENV="development"
 PORT="4000"
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/finance_tracker?schema=public"
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/finance_tracker?schema=public"
 JWT_SECRET="replace-this-with-at-least-32-characters"
 JWT_EXPIRES_IN="7d"
 CLIENT_ORIGIN="http://localhost:3000"
+EMAIL_PROVIDER="resend"
+MAIL_FROM_EMAIL="no-reply@example.com"
+MAIL_FROM_NAME="Finance Tracker"
+RESEND_API_KEY="re_placeholder_api_key"
+RESEND_API_BASE_URL="https://api.resend.com"
+ALLOW_LOCAL_SMTP="false"
+# Optional SMTP fallback when EMAIL_PROVIDER="smtp"
+# SMTP_HOST="smtp.gmail.com"
+# SMTP_PORT="587"
+# SMTP_SECURE="false"
+# SMTP_USER="your-account@gmail.com"
+# SMTP_PASS="your-app-password"
+PASSWORD_RESET_OTP_EXPIRES_MINUTES="15"
 ```
+
+### Cấu hình email OTP
+- Backend hỗ trợ `EMAIL_PROVIDER=resend` qua HTTPS API và `EMAIL_PROVIDER=smtp` như fallback tương thích ngược.
+- Trên Railway nên ưu tiên `EMAIL_PROVIDER=resend` để tránh lỗi outbound SMTP tới Gmail.
+- `MAIL_FROM_EMAIL` và `MAIL_FROM_NAME` là địa chỉ gửi chung cho mọi provider.
+- Với Resend, điền `RESEND_API_KEY` và dùng sender/domain đã verify cho `MAIL_FROM_EMAIL`.
+- Với SMTP, điền `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, và nếu provider yêu cầu auth thì điền cả `SMTP_USER` lẫn `SMTP_PASS`.
+- Nếu dùng Gmail qua SMTP, hãy bật 2FA, tạo App Password cho `SMTP_PASS`, và nên dùng cổng `587` với STARTTLS.
+- Nếu bạn copy nguyên giá trị mẫu như `re_placeholder_api_key` hoặc `no-reply@example.com`, backend sẽ tự coi là chưa cấu hình xong để tránh gửi mail bằng dữ liệu giả.
+- `ALLOW_LOCAL_SMTP=false` sẽ chặn cấu hình `localhost` để tránh OTP vô tình đi vào MailDev thay vì hộp thư thật.
+- Chỉ bật `ALLOW_LOCAL_SMTP=true` khi bạn thật sự muốn debug local mail server trong máy của mình.
 
 ## Chạy database local
 
@@ -105,6 +130,35 @@ npm run prisma:seed
 - SQL migration đầu tiên đã được lưu tại `prisma/migrations/20260508_init/migration.sql`.
 - Nếu bạn dùng PostgreSQL cài sẵn hoặc Docker Postgres ổn định, có thể tiếp tục theo luồng `prisma migrate dev` bình thường.
 
+## Deploy production với Neon
+
+### Chuẩn Prisma cho production
+- Với Prisma 7 trong repo này, `schema.prisma` chỉ giữ `provider = "postgresql"`; connection URL được quản lý ở `prisma.config.ts`.
+- `prisma.config.ts` hiện ưu tiên `DIRECT_URL` cho Prisma CLI và fallback về `DATABASE_URL` nếu chưa khai báo.
+- Với Neon, nên dùng:
+	- `DATABASE_URL` = pooled connection string cho runtime backend
+	- `DIRECT_URL` = direct connection string cho migration
+
+### Mẫu env production
+- Mẫu sẵn có tại [./.env.production.example](./.env.production.example)
+
+### Lệnh migrate production
+```bash
+npm run prisma:generate
+npm run prisma:migrate:deploy
+npm run prisma:seed
+```
+
+Hoặc dùng script gói gọn:
+```bash
+npm run db:deploy
+```
+
+### Ghi chú kiến trúc deploy
+- Frontend Next.js hiện chỉ gọi backend qua `NEXT_PUBLIC_API_BASE_URL`, không chạy Prisma trực tiếp.
+- Nếu dùng Vercel + Neon với repo hiện tại, frontend deploy lên Vercel còn backend vẫn cần deploy trên Node host riêng.
+- Checklist chi tiết: [../deploy-vercel-neon-checklist.md](../deploy-vercel-neon-checklist.md)
+
 ## Chạy backend
 
 ### Dev mode
@@ -130,6 +184,8 @@ npm run start
 npm run typecheck
 npm run prisma:generate
 npm run prisma:migrate
+npm run prisma:migrate:deploy
+npm run db:deploy
 npm run prisma:seed
 ```
 

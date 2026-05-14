@@ -59,6 +59,24 @@ export function TransactionModal({
   const filteredCategories = categories.filter(
     (category) => category.type === selectedType,
   );
+  const transactionCopy =
+    selectedType === "income"
+      ? {
+          heading: mode === "create" ? "Tạo khoản thu mới" : "Cập nhật khoản thu",
+          description: "Khoản thu được nhập riêng để bạn theo dõi nguồn tiền vào độc lập với chi tiêu.",
+          categoryLabel: "Danh mục thu nhập",
+          amountPlaceholder: "Ví dụ: 12000000",
+          notePlaceholder: "Ví dụ: Lương tháng, thưởng, hoàn tiền",
+          submitLabel: mode === "create" ? "Lưu khoản thu" : "Lưu khoản thu",
+        }
+      : {
+          heading: mode === "create" ? "Tạo khoản chi mới" : "Cập nhật khoản chi",
+          description: "Khoản chi được lưu tách biệt để dashboard đọc đúng dòng tiền ra theo từng danh mục.",
+          categoryLabel: "Danh mục chi tiêu",
+          amountPlaceholder: "Ví dụ: 150000",
+          notePlaceholder: "Ví dụ: Mua sắm, ăn uống, thanh toán hóa đơn",
+          submitLabel: mode === "create" ? "Lưu khoản chi" : "Lưu khoản chi",
+        };
 
   useEffect(() => {
     if (isOpen) {
@@ -83,10 +101,10 @@ export function TransactionModal({
           <div>
             <p className="eyebrow">Transaction modal</p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950">
-              {mode === "create" ? "Tạo giao dịch mới" : "Cập nhật giao dịch"}
+              {transactionCopy.heading}
             </h2>
             <p className="mt-3 text-sm leading-6 text-slate-600">
-              Form này dùng React Hook Form + Zod và submit trực tiếp vào backend transaction API.
+              {transactionCopy.description}
             </p>
           </div>
           <button
@@ -100,23 +118,41 @@ export function TransactionModal({
         </div>
 
         <form className="mt-8 grid gap-5" onSubmit={handleSubmit((values) => onSubmit(values))}>
-          <div className="grid gap-5 sm:grid-cols-2">
-            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-              Loại giao dịch
-              <select
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900"
-                {...register("type")}
-              >
-                <option value="expense">Chi</option>
-                <option value="income">Thu</option>
-              </select>
+          <div className="grid gap-5">
+            <div className="grid gap-2">
+              <span className="text-sm font-medium text-slate-700">Loại giao dịch</span>
+              <div className="grid grid-cols-2 gap-3 rounded-[24px] bg-slate-100 p-2">
+                <button
+                  className={`rounded-[18px] px-4 py-3 text-sm font-semibold transition ${
+                    selectedType === "expense"
+                      ? "bg-white text-rose-600 shadow-sm"
+                      : "text-slate-600 hover:bg-white/60"
+                  }`}
+                  type="button"
+                  onClick={() => setValue("type", "expense", { shouldValidate: true, shouldDirty: true })}
+                >
+                  Khoản chi
+                </button>
+                <button
+                  className={`rounded-[18px] px-4 py-3 text-sm font-semibold transition ${
+                    selectedType === "income"
+                      ? "bg-white text-emerald-600 shadow-sm"
+                      : "text-slate-600 hover:bg-white/60"
+                  }`}
+                  type="button"
+                  onClick={() => setValue("type", "income", { shouldValidate: true, shouldDirty: true })}
+                >
+                  Khoản thu
+                </button>
+              </div>
+              <input type="hidden" {...register("type")} />
               {errors.type ? (
                 <span className="text-sm text-orange-700">{errors.type.message}</span>
               ) : null}
-            </label>
+            </div>
 
             <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-              Category
+              {transactionCopy.categoryLabel}
               <select
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900"
                 {...register("categoryId")}
@@ -140,7 +176,7 @@ export function TransactionModal({
               <input
                 className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900"
                 inputMode="numeric"
-                placeholder="Ví dụ: 150000"
+                placeholder={transactionCopy.amountPlaceholder}
                 {...register("amount")}
               />
               {errors.amount ? (
@@ -165,7 +201,7 @@ export function TransactionModal({
             Ghi chú
             <textarea
               className="min-h-28 rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900"
-              placeholder="Mô tả ngắn cho giao dịch"
+              placeholder={transactionCopy.notePlaceholder}
               {...register("note")}
             />
             {errors.note ? (
@@ -191,9 +227,7 @@ export function TransactionModal({
                 ? mode === "create"
                   ? "Đang tạo"
                   : "Đang cập nhật"
-                : mode === "create"
-                  ? "Tạo giao dịch"
-                  : "Lưu thay đổi"}
+                : transactionCopy.submitLabel}
             </button>
           </div>
         </form>

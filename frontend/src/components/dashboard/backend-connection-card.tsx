@@ -3,6 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { financeApi } from "@/lib/api";
 import {
+  passwordRecoveryRequestSchema,
+  passwordResetFormSchema,
+  type PasswordRecoveryRequestValues,
+  type PasswordResetFormValues,
+} from "@/schemas/account-security.schema";
+import {
   loginFormSchema,
   registerFormSchema,
   type LoginFormValues,
@@ -39,6 +45,10 @@ export function BackendConnectionCard({
   const [mode, setMode] = useState<"login" | "register">("login");
   const [authErrorMessage, setAuthErrorMessage] = useState<string | null>(null);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
+  const [isRecoveryOpen, setIsRecoveryOpen] = useState(false);
+  const [recoveryMessage, setRecoveryMessage] = useState<string | null>(null);
+  const [recoveryErrorMessage, setRecoveryErrorMessage] = useState<string | null>(null);
+  const [isSubmittingRecovery, setIsSubmittingRecovery] = useState(false);
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
@@ -57,7 +67,24 @@ export function BackendConnectionCard({
     },
   });
 
-  const isBusy = isLoading || isSubmittingAuth;
+  const requestResetForm = useForm<PasswordRecoveryRequestValues>({
+    resolver: zodResolver(passwordRecoveryRequestSchema),
+    defaultValues: {
+      email: "",
+    },
+  });
+
+  const resetPasswordForm = useForm<PasswordResetFormValues>({
+    resolver: zodResolver(passwordResetFormSchema),
+    defaultValues: {
+      email: "",
+      token: "",
+      newPassword: "",
+      confirmPassword: "",
+    },
+  });
+
+  const isBusy = isLoading || isSubmittingAuth || isSubmittingRecovery;
 
   async function handleLogin(values: LoginFormValues) {
     setIsSubmittingAuth(true);
@@ -93,46 +120,111 @@ export function BackendConnectionCard({
     }
   }
 
+  async function handleRequestPasswordReset(values: PasswordRecoveryRequestValues) {
+    setIsSubmittingRecovery(true);
+    setRecoveryErrorMessage(null);
+    setRecoveryMessage(null);
+
+    try {
+      const response = await financeApi.requestPasswordReset({
+        email: values.email.trim(),
+      });
+
+      resetPasswordForm.setValue("email", values.email.trim(), { shouldValidate: true });
+      resetPasswordForm.setValue("token", "", { shouldValidate: false });
+      setRecoveryMessage(
+        response.data.expiresAt
+          ? "Nếu email tồn tại, mã OTP đã được gửi tới email của bạn. Hãy kiểm tra Inbox hoặc Spam rồi nhập OTP vào biểu mẫu bên dưới."
+          : "Nếu email tồn tại, mã OTP đã được gửi tới email của bạn. Hãy kiểm tra Inbox hoặc Spam để tiếp tục đặt lại mật khẩu.",
+      );
+    } catch (error) {
+      setRecoveryErrorMessage(
+        error instanceof Error ? error.message : "Không thể gửi OTP lúc này.",
+      );
+    } finally {
+      setIsSubmittingRecovery(false);
+    }
+  }
+
+  async function handleResetPassword(values: PasswordResetFormValues) {
+    setIsSubmittingRecovery(true);
+    setRecoveryErrorMessage(null);
+    setRecoveryMessage(null);
+
+    try {
+      await financeApi.resetPassword({
+        email: values.email.trim(),
+        token: values.token.trim(),
+        newPassword: values.newPassword,
+      });
+
+      resetPasswordForm.reset({
+        email: values.email.trim(),
+        token: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+      loginForm.setValue("email", values.email.trim(), { shouldValidate: true });
+      loginForm.setValue("password", values.newPassword, { shouldValidate: false });
+      setRecoveryMessage("Mật khẩu đã được đặt lại. Bạn có thể đăng nhập ngay bằng mật khẩu mới.");
+      setIsRecoveryOpen(false);
+    } catch (error) {
+      setRecoveryErrorMessage(
+        error instanceof Error ? error.message : "Không thể đặt lại mật khẩu lúc này.",
+      );
+    } finally {
+      setIsSubmittingRecovery(false);
+    }
+  }
+
+  function openRecoveryPanel() {
+    setIsRecoveryOpen(true);
+    setRecoveryErrorMessage(null);
+    setRecoveryMessage(null);
+    requestResetForm.setValue("email", loginForm.getValues("email"), { shouldValidate: false });
+    resetPasswordForm.setValue("email", loginForm.getValues("email"), { shouldValidate: false });
+  }
+
   return (
-    <div className="rounded-[30px] border border-white/10 bg-slate-950/80 p-6 text-white shadow-[0_20px_60px_rgba(2,6,23,0.25)]">
-      <p className="text-xs uppercase tracking-[0.26em] text-slate-300">
+    <div className="rounded-[34px] border border-slate-200/90 bg-white p-6 text-slate-900 shadow-[0_24px_72px_rgba(15,23,42,0.07)] sm:p-7">
+      <p className="text-xs uppercase tracking-[0.22em] text-slate-500">
         Trạng thái dashboard
       </p>
-      <p className="mt-4 text-2xl font-semibold">
-        {source === "api" ? "Đang dùng API thật" : "Mock contract đang bật"}
+      <p className="mt-4 text-2xl font-semibold tracking-tight text-slate-950">
+        {source === "api" ? "Đã kết nối dữ liệu thật" : "Đang ở chế độ mock"}
       </p>
-      <p className="mt-3 text-sm leading-6 text-slate-300">
+      <p className="mt-3 text-sm leading-6 text-slate-600">
         Chu kỳ hiện tại: {periodLabel}
       </p>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-300">
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
             Route chính
           </p>
-          <p className="mt-2 text-sm font-medium">/dashboard</p>
+          <p className="mt-2 text-sm font-medium text-slate-900">/dashboard</p>
         </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-300">
+        <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
             User hiện tại
           </p>
-          <p className="mt-2 text-sm font-medium">
+          <p className="mt-2 text-sm font-medium text-slate-900">
             {currentUser ? currentUser.email : "Chưa đăng nhập"}
           </p>
         </div>
       </div>
 
       {isConnected ? (
-        <div className="mt-6 rounded-[24px] border border-white/10 bg-white/5 p-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-slate-300">
+        <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-5">
+          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
             Phiên đăng nhập
           </p>
-          <p className="mt-3 text-sm leading-6 text-slate-200">
+          <p className="mt-3 text-sm leading-6 text-slate-600">
             {currentUser?.fullName} đang đăng nhập. Dashboard sẽ tự dùng access token đã lưu để đồng bộ dữ liệu thật.
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <button
-              className="rounded-full bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-blue-300"
+              className="rounded-full bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-300"
               type="button"
               onClick={onRefresh}
               disabled={isBusy}
@@ -140,7 +232,7 @@ export function BackendConnectionCard({
               {isLoading ? "Đang đồng bộ" : "Đồng bộ lại"}
             </button>
             <button
-              className="rounded-full border border-white/15 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-white disabled:cursor-not-allowed disabled:opacity-50"
               type="button"
               onClick={onDisconnect}
               disabled={isBusy}
@@ -150,18 +242,21 @@ export function BackendConnectionCard({
           </div>
         </div>
       ) : (
-        <div className="mt-6 rounded-[24px] border border-white/10 bg-white/5 p-4">
+        <div className="mt-6 rounded-[28px] border border-slate-200 bg-slate-50 p-5">
           <div className="flex flex-wrap gap-2">
             <button
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 mode === "login"
-                  ? "bg-blue-500 text-white"
-                  : "border border-white/15 text-white hover:bg-white/5"
+                  ? "bg-blue-600 text-white"
+                  : "border border-slate-300 text-slate-700 hover:bg-white"
               }`}
               type="button"
               onClick={() => {
                 setMode("login");
                 setAuthErrorMessage(null);
+                setIsRecoveryOpen(false);
+                setRecoveryMessage(null);
+                setRecoveryErrorMessage(null);
               }}
               disabled={isBusy}
             >
@@ -170,13 +265,16 @@ export function BackendConnectionCard({
             <button
               className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                 mode === "register"
-                  ? "bg-blue-500 text-white"
-                  : "border border-white/15 text-white hover:bg-white/5"
+                  ? "bg-blue-600 text-white"
+                  : "border border-slate-300 text-slate-700 hover:bg-white"
               }`}
               type="button"
               onClick={() => {
                 setMode("register");
                 setAuthErrorMessage(null);
+                setIsRecoveryOpen(false);
+                setRecoveryMessage(null);
+                setRecoveryErrorMessage(null);
               }}
               disabled={isBusy}
             >
@@ -189,10 +287,10 @@ export function BackendConnectionCard({
               className="mt-5 grid gap-4"
               onSubmit={loginForm.handleSubmit(handleLogin)}
             >
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-200">
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 Email
                 <input
-                  className="rounded-2xl border border-white/15 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400"
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
                   placeholder="you@example.com"
                   {...loginForm.register("email")}
                 />
@@ -203,10 +301,10 @@ export function BackendConnectionCard({
                 ) : null}
               </label>
 
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-200">
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 Mật khẩu
                 <input
-                  className="rounded-2xl border border-white/15 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400"
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
                   type="password"
                   placeholder="Password123"
                   {...loginForm.register("password")}
@@ -219,11 +317,20 @@ export function BackendConnectionCard({
               </label>
 
               <button
-                className="rounded-full bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-blue-300"
+                className="rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-300"
                 type="submit"
                 disabled={isBusy}
               >
                 {isSubmittingAuth ? "Đang đăng nhập" : "Đăng nhập và đồng bộ"}
+              </button>
+
+              <button
+                className="justify-self-start text-sm font-semibold text-blue-600 transition hover:text-blue-500"
+                type="button"
+                onClick={openRecoveryPanel}
+                disabled={isBusy}
+              >
+                Quên mật khẩu?
               </button>
             </form>
           ) : (
@@ -231,10 +338,10 @@ export function BackendConnectionCard({
               className="mt-5 grid gap-4"
               onSubmit={registerForm.handleSubmit(handleRegister)}
             >
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-200">
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 Họ tên
                 <input
-                  className="rounded-2xl border border-white/15 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400"
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
                   placeholder="Nguyen Van A"
                   {...registerForm.register("fullName")}
                 />
@@ -245,10 +352,10 @@ export function BackendConnectionCard({
                 ) : null}
               </label>
 
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-200">
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 Email
                 <input
-                  className="rounded-2xl border border-white/15 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400"
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
                   placeholder="you@example.com"
                   {...registerForm.register("email")}
                 />
@@ -259,10 +366,10 @@ export function BackendConnectionCard({
                 ) : null}
               </label>
 
-              <label className="flex flex-col gap-2 text-sm font-medium text-slate-200">
+              <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
                 Mật khẩu
                 <input
-                  className="rounded-2xl border border-white/15 bg-slate-900/60 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400"
+                  className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
                   type="password"
                   placeholder="Password123"
                   {...registerForm.register("password")}
@@ -275,7 +382,7 @@ export function BackendConnectionCard({
               </label>
 
               <button
-                className="rounded-full bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:cursor-not-allowed disabled:bg-blue-300"
+                className="rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-300"
                 type="submit"
                 disabled={isBusy}
               >
@@ -283,17 +390,152 @@ export function BackendConnectionCard({
               </button>
             </form>
           )}
+
+          {mode === "login" && isRecoveryOpen ? (
+            <div className="mt-5 space-y-4 rounded-[24px] border border-slate-200 bg-white p-4">
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-slate-900">Khôi phục mật khẩu bằng OTP</p>
+                <p className="text-sm leading-6 text-slate-600">
+                  Yêu cầu OTP qua email trước, sau đó nhập OTP và mật khẩu mới để đặt lại tài khoản ngay trên website.
+                </p>
+              </div>
+
+              <form className="grid gap-3" onSubmit={requestResetForm.handleSubmit(handleRequestPasswordReset)}>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  Email nhận OTP
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
+                    placeholder="you@example.com"
+                    {...requestResetForm.register("email")}
+                  />
+                  {requestResetForm.formState.errors.email ? (
+                    <span className="text-sm text-rose-600">
+                      {requestResetForm.formState.errors.email.message}
+                    </span>
+                  ) : null}
+                </label>
+
+                <button
+                  className="justify-self-start rounded-full border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  type="submit"
+                  disabled={isBusy}
+                >
+                  {isSubmittingRecovery ? "Đang gửi OTP" : "Gửi mã OTP"}
+                </button>
+              </form>
+
+              <form className="grid gap-3" onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)}>
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  Email tài khoản
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
+                    placeholder="you@example.com"
+                    {...resetPasswordForm.register("email")}
+                  />
+                  {resetPasswordForm.formState.errors.email ? (
+                    <span className="text-sm text-rose-600">
+                      {resetPasswordForm.formState.errors.email.message}
+                    </span>
+                  ) : null}
+                </label>
+
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  Mã OTP
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
+                    inputMode="numeric"
+                    placeholder="Nhập 6 số OTP"
+                    {...resetPasswordForm.register("token")}
+                  />
+                  {resetPasswordForm.formState.errors.token ? (
+                    <span className="text-sm text-rose-600">
+                      {resetPasswordForm.formState.errors.token.message}
+                    </span>
+                  ) : null}
+                </label>
+
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  Mật khẩu mới
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
+                    type="password"
+                    placeholder="Tối thiểu 8 ký tự"
+                    {...resetPasswordForm.register("newPassword")}
+                  />
+                  {resetPasswordForm.formState.errors.newPassword ? (
+                    <span className="text-sm text-rose-600">
+                      {resetPasswordForm.formState.errors.newPassword.message}
+                    </span>
+                  ) : null}
+                </label>
+
+                <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
+                  Xác nhận mật khẩu mới
+                  <input
+                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-400"
+                    type="password"
+                    placeholder="Nhập lại mật khẩu mới"
+                    {...resetPasswordForm.register("confirmPassword")}
+                  />
+                  {resetPasswordForm.formState.errors.confirmPassword ? (
+                    <span className="text-sm text-rose-600">
+                      {resetPasswordForm.formState.errors.confirmPassword.message}
+                    </span>
+                  ) : null}
+                </label>
+
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    className="rounded-full bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:bg-blue-300"
+                    type="submit"
+                    disabled={isBusy}
+                  >
+                    {isSubmittingRecovery ? "Đang đặt lại mật khẩu" : "Đặt lại mật khẩu"}
+                  </button>
+                  <button
+                    className="rounded-full border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                    type="button"
+                    onClick={() => {
+                      setIsRecoveryOpen(false);
+                      setRecoveryErrorMessage(null);
+                      setRecoveryMessage(null);
+                    }}
+                    disabled={isBusy}
+                  >
+                    Đóng
+                  </button>
+                </div>
+              </form>
+
+              {recoveryMessage ? (
+                <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700">
+                  {recoveryMessage}
+                </p>
+              ) : null}
+              {recoveryErrorMessage ? (
+                <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
+                  {recoveryErrorMessage}
+                </p>
+              ) : null}
+            </div>
+          ) : null}
         </div>
       )}
 
       {authErrorMessage ? (
-        <p className="mt-4 text-sm leading-6 text-red-300">{authErrorMessage}</p>
+        <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
+          {authErrorMessage}
+        </p>
       ) : null}
       {helperMessage ? (
-        <p className="mt-4 text-sm leading-6 text-emerald-300">{helperMessage}</p>
+        <p className="mt-4 rounded-2xl bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700">
+          {helperMessage}
+        </p>
       ) : null}
       {errorMessage ? (
-        <p className="mt-4 text-sm leading-6 text-red-300">{errorMessage}</p>
+        <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm leading-6 text-rose-700">
+          {errorMessage}
+        </p>
       ) : null}
     </div>
   );

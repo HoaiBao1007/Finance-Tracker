@@ -12,7 +12,7 @@ type ExpensePieChartProps = {
   totalExpense: string;
 };
 
-const COLORS = ["#3B82F6", "#1E293B", "#10B981", "#93C5FD", "#EF4444"];
+const COLORS = ["#2563EB", "#10B981", "#F59E0B", "#F97316", "#8B5CF6", "#EC4899"];
 
 function formatTooltipValue(
   value: number | string | readonly (number | string)[] | undefined,
@@ -68,32 +68,32 @@ export function ExpensePieChart({ items, totalExpense }: ExpensePieChartProps) {
   }, []);
 
   return (
-    <Card className="panel min-w-0 rounded-[32px] border-slate-200/80 bg-white/85">
-      <CardContent className="p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <Card className="min-w-0 rounded-[34px] border border-slate-200/90 bg-white shadow-[0_24px_72px_rgba(15,23,42,0.07)]">
+      <CardContent className="p-6 sm:p-7">
+        <div className="flex flex-col gap-4">
           <div>
-            <Badge className="bg-blue-100 text-blue-700">Chi tiêu theo nhóm</Badge>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-              Biểu đồ chi tiêu trọng tâm
+            <Badge className="bg-slate-100 text-slate-700">Cơ cấu chi tiêu</Badge>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950">
+              Chi tiêu theo hạng mục
             </h2>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-slate-600">
-              Khối này chiếm 2/3 hàng nội dung để bạn nhìn nhanh tỷ trọng từng nhóm chi tiêu ngay khi mở dashboard.
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Donut chart giúp nhìn nhanh nhóm nào đang chiếm tỷ trọng lớn nhất trong tháng hiện tại.
             </p>
           </div>
-          <div className="rounded-2xl bg-slate-800 px-4 py-3 text-white">
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-300">Tổng chi</p>
-            <p className="mt-2 text-lg font-semibold">{formatMoney(totalExpense)}</p>
+          <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
+            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Tổng chi tháng</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{formatMoney(totalExpense)}</p>
           </div>
         </div>
 
-        <div ref={chartContainerRef} className="mt-6 h-[360px] min-w-0 xl:h-[400px]">
+        <div ref={chartContainerRef} className="mt-6 h-[320px] min-w-0 sm:h-[360px] xl:h-[400px]">
           {chartSize.width > 0 && chartSize.height > 0 ? (
             <PieChart height={chartSize.height} width={chartSize.width}>
                 <Pie
                   data={chartData}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={80}
+                  innerRadius={74}
                   outerRadius={124}
                   paddingAngle={4}
                 >
@@ -101,8 +101,15 @@ export function ExpensePieChart({ items, totalExpense }: ExpensePieChartProps) {
                     <Cell key={`${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>
-                <Tooltip formatter={(value) => formatTooltipValue(value)} />
-                <Legend />
+                <Tooltip
+                  formatter={(value) => formatTooltipValue(value)}
+                  contentStyle={{
+                    border: "1px solid rgba(226, 232, 240, 0.95)",
+                    borderRadius: "16px",
+                    boxShadow: "0 18px 50px rgba(15, 23, 42, 0.12)",
+                  }}
+                />
+                <Legend wrapperStyle={{ paddingTop: 24, fontSize: 12 }} />
             </PieChart>
           ) : (
             <div className="h-full rounded-[28px] bg-slate-100/80" />

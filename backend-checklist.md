@@ -32,17 +32,24 @@
 ## Phase 3 - Auth Module
 - [x] Tạo validator cho register.
 - [x] Tạo validator cho login.
+- [x] Tạo validator cho update profile, đổi mật khẩu, quên mật khẩu và reset mật khẩu.
 - [x] Tạo service register.
 - [x] Tạo service login.
+- [x] Tạo service update profile, đổi mật khẩu và reset mật khẩu.
 - [x] Tạo controller register.
 - [x] Tạo controller login.
 - [x] Tạo controller me.
+- [x] Tạo controller update profile, change password, forgot/reset password.
 - [x] Tạo auth route.
 - [x] Tạo JWT auth middleware.
 - [x] Gắn user vào request type.
 - [x] Test `POST /auth/register`.
 - [x] Test `POST /auth/login`.
 - [x] Test `GET /auth/me`.
+- [x] Test `POST /auth/forgot-password`.
+- [x] Test `POST /auth/reset-password`.
+- [x] Test `PATCH /auth/profile`.
+- [x] Test `POST /auth/change-password`.
 
 ## Phase 4 - Category Module
 - [x] Tạo validator tạo category.

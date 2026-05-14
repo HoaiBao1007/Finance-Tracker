@@ -66,6 +66,19 @@ Tạo `.env.local` từ `.env.example` và cấu hình backend URL:
 NEXT_PUBLIC_API_BASE_URL="http://localhost:4000/api/v1"
 ```
 
+### Production trên Vercel
+- Tạo env production theo mẫu [./.env.production.example](./.env.production.example)
+- Bắt buộc phải set:
+
+```env
+NEXT_PUBLIC_API_BASE_URL="https://<your-backend-domain>/api/v1"
+```
+
+Ghi chú:
+- Frontend hiện không truy cập Neon trực tiếp.
+- Vercel chỉ cần biết URL backend thật; Prisma và database chỉ nằm ở backend service.
+- Checklist triển khai đầy đủ: [../deploy-vercel-neon-checklist.md](../deploy-vercel-neon-checklist.md)
+
 ## Cách bật live mode
 1. Chạy backend ở `http://localhost:4000`.
 2. Mở dashboard frontend.
