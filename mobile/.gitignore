@@ -39,3 +39,8 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# local debug captures
+/ft-*.png
+/ft-*.xml
+/emulator-current-screen*.png

@@ -22,3 +22,9 @@ frontend/out/
 *.log
 .DS_Store
 Thumbs.db
+
+# local workspace temp/debug artifacts
+.vscode/
+400
+tmp-*.png
+tmp-*.xml
