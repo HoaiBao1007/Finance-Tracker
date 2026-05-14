@@ -54,11 +54,11 @@ export const categoryService = {
   listCategories: async (userId: string, query: ListCategoriesQuery) => {
     return prisma.category.findMany({
       where: {
-        OR: [{ userId }, { userId: null, isDefault: true }],
+        OR: [{ userId }, { userId: null, isCustom: false }],
         ...(query.type ? { type: query.type } : {}),
       },
       select: categorySelect,
-      orderBy: [{ isDefault: "desc" }, { name: "asc" }],
+      orderBy: [{ isCustom: "asc" }, { name: "asc" }],
     });
   },
 
@@ -88,7 +88,7 @@ export const categoryService = {
         userId,
         name: normalizedName,
         type: input.type,
-        isDefault: false,
+        isCustom: true,
       },
       select: categorySelect,
     });

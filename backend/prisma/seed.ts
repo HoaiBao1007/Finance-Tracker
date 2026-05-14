@@ -24,7 +24,7 @@ const seed = async () => {
       where: {
         name: category.name,
         type: category.type,
-        isDefault: true,
+        isCustom: false,
       },
       select: {
         id: true,
@@ -38,7 +38,7 @@ const seed = async () => {
     await prisma.category.create({
       data: {
         ...category,
-        isDefault: true,
+        isCustom: false,
       },
     });
   }
