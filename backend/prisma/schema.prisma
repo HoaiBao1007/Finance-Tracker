@@ -50,7 +50,7 @@ model Category {
   transactions Transaction[]
   budgets      Budget[]
 
-  @@index([userId, name, type], unique: true)
+  @@unique([userId, name, type])
   @@index([type])
 }
 

@@ -18,7 +18,7 @@ const transactionInclude = {
       id: true,
       name: true,
       type: true,
-      isDefault: true,
+      isCustom: true,
     },
   },
 } satisfies Prisma.TransactionInclude;

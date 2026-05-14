@@ -9,7 +9,7 @@ const categorySelect = {
   userId: true,
   name: true,
   type: true,
-  isDefault: true,
+  isCustom: true,
   createdAt: true,
   updatedAt: true,
 } satisfies Prisma.CategorySelect;
@@ -22,7 +22,7 @@ const normalizeCategoryName = (value: string) => value.trim().replace(/\s+/g, " 
 
 const accessibleCategoryFilter = (userId: string, categoryId: string): Prisma.CategoryWhereInput => ({
   id: categoryId,
-  OR: [{ userId }, { userId: null, isDefault: true }],
+  OR: [{ userId }, { userId: null }],
 });
 
 export const ensureAccessibleCategory = async (

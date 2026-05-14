@@ -13,7 +13,7 @@ const budgetInclude = {
       id: true,
       name: true,
       type: true,
-      isDefault: true,
+      isCustom: true,
     },
   },
 } satisfies Prisma.BudgetInclude;
