@@ -99,7 +99,7 @@ export function SearchableSelect({
                 onClick={() => setIsAddingNew(true)}
                 className="w-full px-3 py-2 text-left text-blue-600 hover:bg-blue-50"
               >
-                + Thêm "{searchTerm}"
+                + Thêm &quot;{searchTerm}&quot;
               </button>
             )}
 

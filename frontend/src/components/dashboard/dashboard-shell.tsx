@@ -166,9 +166,6 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
       ? "Đã kết nối dữ liệu thật từ backend và sẵn sàng CRUD ngay trên dashboard."
       : "Đang dùng dataset mẫu để hoàn thiện trải nghiệm giao diện trước khi đồng bộ backend.";
 
-  const cardPadding = "p-6";
-  const donutChartSize = "w-80 h-80"; // Adjusted size for the donut chart
-  const legendPosition = "bottom"; // Set legend position to bottom for consistency
 
   function showToast(tone: ToastState["tone"], title: string, message: string) {
     nextToastIdRef.current += 1;

@@ -16,7 +16,7 @@ export function NewCategory() {
 
     setIsSubmitting(true);
     try {
-      await createCategory({ name: categoryName, type: categoryType });
+      await createCategory({ name: categoryName, type: categoryType as "expense" | "income" });
       setCategoryName("");
       router.refresh(); // Refresh the page to show the new category
     } catch (error) {
