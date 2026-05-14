@@ -109,6 +109,19 @@
 - [ ] Thêm toast hoặc feedback thành công nếu cần.
 - [ ] Kiểm tra filter tháng/năm cập nhật dashboard đúng.
 
+## Phase 10 - Custom Categories
+- [x] Tạo SearchableSelect component cho dropdown category.
+- [x] Tạo NewCategorySection component trong Account Settings.
+- [x] Tạo settings page tại `app/settings/page.tsx`.
+- [x] Tích hợp NewCategorySection vào AccountSettingsCard.
+- [x] Cập nhật TransactionModal để dùng SearchableSelect.
+- [x] Thêm handleAddNewCategory để tạo category inline trong transaction.
+- [x] Đảm bảo category mới được thêm vào danh sách categories ngay.
+- [x] Sửa Transaction Modal lỗi JSX và type errors.
+- [ ] Test category creation flow end-to-end.
+- [ ] Test searchable select với nhiều categories.
+- [ ] Test category filter theo type (expense/income).
+
 ## Definition of Done
 - [x] Dashboard page hiển thị đúng dữ liệu thật.
 - [x] Summary cards đúng số liệu.

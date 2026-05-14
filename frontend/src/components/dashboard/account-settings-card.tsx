@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { NewCategorySection } from "@/components/dashboard/new-category-section";
 import { financeApi } from "@/lib/api";
 import {
   changePasswordFormSchema,
@@ -289,6 +290,22 @@ export function AccountSettingsCard({
               >
                 {isSavingProfile ? "Đang lưu hồ sơ" : "Lưu hồ sơ"}
               </Button>
+            </div>
+
+            <div className="border-t border-slate-200 pt-5">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500">
+                  Danh mục
+                </p>
+                <h4 className="text-xl font-semibold tracking-tight text-slate-950">
+                  Thêm danh mục mới
+                </h4>
+                <p className="text-sm leading-6 text-slate-600">
+                  Tạo danh mục tùy chỉnh để bạn theo dõi chi tiêu theo cách của mình.
+                </p>
+              </div>
+
+              <NewCategorySection authToken={authToken} onSuccess={onSuccess} onError={onError} />
             </div>
 
             <div className="border-t border-slate-200 pt-5">

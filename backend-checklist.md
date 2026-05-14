@@ -113,6 +113,14 @@
 - [x] Kiểm tra BigInt serialization trong response JSON.
 - [ ] Chuẩn bị backend để deploy.
 
+## Phase 9 - Custom Categories
+- [x] Thêm `isCustom` field và optional `userId` field vào Category model trong Prisma.
+- [x] Cập nhật validator để hỗ trợ `isCustom` field tùy chọn.
+- [x] Đảm bảo `POST /categories` tạo category custom cho user.
+- [x] Đảm bảo `GET /categories` trả tất cả category (mặc định + custom).
+- [x] Kiểm tra custom category chỉ thuộc user sở hữu.
+- [x] Kiểm tra unique constraint vẫn hoạt động cho custom categories.
+
 ## Definition of Done
 - [x] Auth chạy ổn định.
 - [x] Category chạy ổn định.

@@ -194,6 +194,34 @@ Ghi chú:
 - [x] Có URL demo hoặc staging.
 - [x] Toàn bộ checklist MVP đã đạt.
 
+## Week 9 - Custom Categories
+
+### Mục tiêu
+- Cho phép user tạo danh mục chi tiêu riêng.
+
+### Công việc
+- [x] Backend: Thêm `isCustom` và `userId` field vào Category model.
+- [x] Backend: Cập nhật validator để hỗ trợ `isCustom`.
+- [x] Frontend: Tạo SearchableSelect component.
+- [x] Frontend: Tạo NewCategorySection component.
+- [x] Frontend: Tạo settings page và route.
+- [x] Frontend: Tích hợp NewCategorySection vào Account Settings.
+- [x] Frontend: Cập nhật Transaction Modal để dùng SearchableSelect.
+- [x] Frontend: Fix Transaction Modal lỗi JSX và type errors.
+- [ ] Test category creation end-to-end.
+- [ ] Test searchable select với nhiều categories.
+- [ ] Test mobile app category feature.
+
+### Đầu ra tuần
+- User có thể tạo category custom trong Account Settings.
+- User có thể tạo category inline khi tạo transaction.
+- Category search hoạt động mượt cho nhiều categories.
+
+### Exit criteria
+- [x] Frontend không còn lỗi compilation.
+- [ ] Category creation flow chạy end-to-end.
+- [ ] Mobile app cũng hỗ trợ custom categories.
+
 ## Gợi ý nhịp làm việc theo ngày
 - Thứ 2: setup hoặc thiết kế.
 - Thứ 3 đến Thứ 5: code tính năng chính.

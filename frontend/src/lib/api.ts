@@ -199,3 +199,8 @@ export const financeApi = {
       token,
     }),
 };
+
+export const getCategories = async (query?: { type?: "income" | "expense" }, token?: string): Promise<Category[]> => {
+  const response = await request<Category[]>("/categories", { query, token });
+  return response.data;
+};

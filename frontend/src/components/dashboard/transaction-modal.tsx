@@ -7,8 +7,10 @@ import {
   type TransactionFormValues,
 } from "@/schemas/transaction-form.schema";
 import type { Category, Transaction } from "@/types/finance";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
+import { createCategory } from "@/services/category.service";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 type TransactionModalProps = {
   isOpen: boolean;
@@ -17,6 +19,7 @@ type TransactionModalProps = {
   initialTransaction?: Transaction | null;
   isSubmitting: boolean;
   onClose: () => void;
+  onCategoriesUpdated?: (categories: Category[]) => void;
   onSubmit: (values: TransactionFormValues) => Promise<void> | void;
 };
 
@@ -33,12 +36,19 @@ function buildDefaultValues(transaction?: Transaction | null): TransactionFormVa
 export function TransactionModal({
   isOpen,
   mode,
-  categories,
+  categories: propsCategories,
   initialTransaction,
   isSubmitting,
   onClose,
+  onCategoriesUpdated,
   onSubmit,
 }: TransactionModalProps) {
+  const [categories, setCategories] = useState<Category[]>(propsCategories);
+
+  useEffect(() => {
+    setCategories(propsCategories);
+  }, [propsCategories]);
+
   const {
     control,
     formState: { errors },
@@ -56,9 +66,15 @@ export function TransactionModal({
     name: "type",
   });
 
+  const selectedCategoryId = useWatch({
+    control,
+    name: "categoryId",
+  });
+
   const filteredCategories = categories.filter(
     (category) => category.type === selectedType,
   );
+
   const transactionCopy =
     selectedType === "income"
       ? {
@@ -90,6 +106,23 @@ export function TransactionModal({
     }
   }, [filteredCategories, initialTransaction?.categoryId, setValue]);
 
+  const handleAddNewCategory = async (name: string, type: string) => {
+    try {
+      const newCategory = await createCategory({
+        name,
+        type: type as "expense" | "income",
+      });
+      const updatedCategories = [...categories, newCategory];
+      setCategories(updatedCategories);
+      if (onCategoriesUpdated) {
+        onCategoriesUpdated(updatedCategories);
+      }
+      setValue("categoryId", newCategory.id);
+    } catch (error) {
+      console.error("Failed to add category", error);
+    }
+  };
+
   if (!isOpen) {
     return null;
   }
@@ -119,6 +152,20 @@ export function TransactionModal({
 
         <form className="mt-8 grid gap-5" onSubmit={handleSubmit((values) => onSubmit(values))}>
           <div className="grid gap-5">
+            <div className="grid gap-2">
+              <label className="text-sm font-medium text-slate-700">{transactionCopy.categoryLabel}</label>
+              <SearchableSelect
+                categories={filteredCategories}
+                value={selectedCategoryId}
+                onChange={(categoryId) => setValue("categoryId", categoryId)}
+                onAddNew={handleAddNewCategory}
+                placeholder={`Chọn ${transactionCopy.categoryLabel.toLowerCase()}`}
+              />
+              {errors.categoryId && (
+                <p className="text-sm text-red-600">{errors.categoryId.message}</p>
+              )}
+            </div>
+
             <div className="grid gap-2">
               <span className="text-sm font-medium text-slate-700">Loại giao dịch</span>
               <div className="grid grid-cols-2 gap-3 rounded-[24px] bg-slate-100 p-2">
@@ -163,6 +210,7 @@ export function TransactionModal({
                     {category.name}
                   </option>
                 ))}
+                <option value="add-new-category">+ Thêm danh mục mới</option>
               </select>
               {errors.categoryId ? (
                 <span className="text-sm text-orange-700">{errors.categoryId.message}</span>
