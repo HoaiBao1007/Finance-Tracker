@@ -80,22 +80,22 @@ export function ExpensePieChart({ items, totalExpense }: ExpensePieChartProps) {
               Donut chart giúp nhìn nhanh nhóm nào đang chiếm tỷ trọng lớn nhất trong tháng hiện tại.
             </p>
           </div>
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
+          <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-5 py-5">
             <p className="text-xs uppercase tracking-[0.24em] text-slate-500">Tổng chi tháng</p>
             <p className="mt-2 text-2xl font-semibold text-slate-950">{formatMoney(totalExpense)}</p>
           </div>
         </div>
 
-        <div ref={chartContainerRef} className="mt-6 h-[320px] min-w-0 sm:h-[360px] xl:h-[400px]">
+        <div ref={chartContainerRef} className="mt-6 h-[360px] min-w-0 sm:h-[400px] xl:h-[440px]">
           {chartSize.width > 0 && chartSize.height > 0 ? (
             <PieChart height={chartSize.height} width={chartSize.width}>
                 <Pie
                   data={chartData}
                   dataKey="value"
                   nameKey="name"
-                  innerRadius={74}
-                  outerRadius={124}
-                  paddingAngle={4}
+                  innerRadius={84}
+                  outerRadius={142}
+                  paddingAngle={5}
                 >
                   {chartData.map((entry, index) => (
                     <Cell key={`${entry.name}-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -109,7 +109,7 @@ export function ExpensePieChart({ items, totalExpense }: ExpensePieChartProps) {
                     boxShadow: "0 18px 50px rgba(15, 23, 42, 0.12)",
                   }}
                 />
-                <Legend wrapperStyle={{ paddingTop: 24, fontSize: 12 }} />
+                <Legend wrapperStyle={{ paddingTop: 28, fontSize: 12 }} />
             </PieChart>
           ) : (
             <div className="h-full rounded-[28px] bg-slate-100/80" />

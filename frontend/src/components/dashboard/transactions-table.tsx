@@ -44,8 +44,8 @@ export function TransactionsTable({
   }
 
   return (
-    <section className="rounded-[34px] border border-slate-200/90 bg-white p-6 shadow-[0_24px_72px_rgba(15,23,42,0.07)] sm:p-7">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className="rounded-[34px] border border-slate-200/90 bg-white p-6 shadow-[0_24px_72px_rgba(15,23,42,0.07)] sm:p-7 lg:p-8">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="eyebrow">Bottom row</p>
           <h2 className="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-[2rem]">
@@ -65,7 +65,7 @@ export function TransactionsTable({
         </button>
       </div>
 
-      <div className="mt-6 overflow-x-auto rounded-[28px] border border-slate-200">
+      <div className="mt-7 overflow-x-auto rounded-[28px] border border-slate-200">
         <table className="min-w-full border-collapse text-left">
           <thead className="bg-slate-50/90">
             <tr className="text-xs uppercase tracking-[0.22em] text-slate-500">

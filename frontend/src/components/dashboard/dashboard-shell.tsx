@@ -473,11 +473,11 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
 
   return (
     <>
-      <main className="min-h-screen px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
-        <div className="mx-auto max-w-[1440px] space-y-6 lg:space-y-8">
-          <section className="panel relative overflow-hidden rounded-[40px] bg-[linear-gradient(135deg,#ffffff_0%,#f7fbff_58%,#f1f8ff_100%)] px-6 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-            <div className="relative flex flex-col gap-8">
-              <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+      <main className="min-h-screen px-4 py-5 sm:px-6 sm:py-8 lg:px-8 lg:py-10">
+        <div className="mx-auto max-w-[1480px] space-y-8 lg:space-y-10">
+          <section className="panel relative overflow-hidden rounded-[44px] bg-[linear-gradient(135deg,#ffffff_0%,#f7fbff_58%,#f1f8ff_100%)] px-6 py-7 sm:px-8 sm:py-10 lg:px-12 lg:py-12">
+            <div className="relative flex flex-col gap-10">
+              <div className="flex flex-col gap-8 xl:flex-row xl:items-start xl:justify-between">
                 <div className="max-w-3xl">
                   <Badge className="bg-slate-900 text-white">Dashboard cá nhân</Badge>
                   <h1 className="mt-4 text-4xl font-semibold tracking-tight text-slate-950 sm:text-5xl">
@@ -499,14 +499,14 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
                   </div>
                 </div>
 
-                <div className="flex w-full flex-col gap-3 xl:max-w-[320px] xl:items-stretch">
-                  <div className="rounded-[28px] border border-white/90 bg-white/90 p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
+                <div className="flex w-full flex-col gap-4 xl:max-w-[340px] xl:items-stretch">
+                  <div className="rounded-[28px] border border-white/90 bg-white/90 p-6 shadow-[0_18px_50px_rgba(15,23,42,0.06)]">
                     <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Tổng quan kỳ</p>
                     <p className="mt-3 text-lg font-semibold text-slate-950">{currentPeriodLabel}</p>
                     <p className="mt-2 text-sm leading-6 text-slate-600">{sourceDescription}</p>
                   </div>
                   <button
-                    className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-3.5 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(37,99,235,0.25)] transition hover:bg-blue-500"
+                    className="inline-flex items-center justify-center rounded-full bg-blue-600 px-5 py-4 text-sm font-semibold text-white shadow-[0_16px_36px_rgba(37,99,235,0.25)] transition hover:bg-blue-500"
                     type="button"
                     onClick={openCreateTransactionModal}
                   >
@@ -526,7 +526,7 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
                 </div>
               ) : null}
 
-              <div className="grid gap-4 xl:grid-cols-3">
+              <div className="grid gap-5 xl:grid-cols-3">
                 <SummaryCard
                   staggerIndex={0}
                   animateCount
@@ -553,7 +553,7 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
             </div>
           </section>
 
-          <section className="grid gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(320px,1fr)]">
+          <section className="grid gap-8 xl:grid-cols-[minmax(0,2fr)_minmax(340px,1fr)]">
             <IncomeExpenseBarChart
               items={dashboardData.monthlyTrend.months}
               source={dashboardData.source}
@@ -573,7 +573,7 @@ export function DashboardShell({ data: initialData }: DashboardShellProps) {
             onDelete={handleDeleteTransaction}
           />
 
-          <section className="grid gap-6 xl:grid-cols-[minmax(320px,0.95fr)_minmax(0,1.4fr)]">
+          <section className="grid gap-8 xl:grid-cols-[minmax(340px,0.95fr)_minmax(0,1.4fr)]">
             <div className="space-y-6">
               <BackendConnectionCard
                 currentUser={currentUser}
