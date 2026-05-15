@@ -1,15 +1,9 @@
-import { Platform } from 'react-native';
-
 const productionApiBaseUrl = 'https://api-production-9dae.up.railway.app/api/v1';
 
-const developmentApiBaseUrl =
-  Platform.select({
-    android: 'http://10.0.2.2:4000/api/v1',
-    default: 'http://localhost:4000/api/v1',
-  }) || 'http://localhost:4000/api/v1';
-
-const fallbackApiBaseUrl = __DEV__ ? developmentApiBaseUrl : productionApiBaseUrl;
-
 export const env = {
-  apiBaseUrl: process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, '') || fallbackApiBaseUrl,
+  // Always default to production API so real devices do not accidentally target localhost.
+  // Use EXPO_PUBLIC_API_BASE_URL to opt in to local emulator endpoints during development.
+  apiBaseUrl:
+    process.env.EXPO_PUBLIC_API_BASE_URL?.replace(/\/$/, '') ||
+    productionApiBaseUrl,
 };
