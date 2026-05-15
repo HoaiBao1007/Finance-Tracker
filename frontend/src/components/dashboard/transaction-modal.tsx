@@ -198,24 +198,7 @@ export function TransactionModal({
               ) : null}
             </div>
 
-            <label className="flex flex-col gap-2 text-sm font-medium text-slate-700">
-              {transactionCopy.categoryLabel}
-              <select
-                className="rounded-2xl border border-slate-200 bg-white px-4 py-3 outline-none transition focus:border-slate-900"
-                {...register("categoryId")}
-              >
-                <option value="">Chọn category</option>
-                {filteredCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-                <option value="add-new-category">+ Thêm danh mục mới</option>
-              </select>
-              {errors.categoryId ? (
-                <span className="text-sm text-orange-700">{errors.categoryId.message}</span>
-              ) : null}
-            </label>
+            {/* Đã loại bỏ select cũ, chỉ giữ lại SearchableSelect */}
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
